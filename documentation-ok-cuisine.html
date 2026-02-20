@@ -1,0 +1,1772 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OK Cuisine - Documentation Complete</title>
+<style>
+  :root {
+    --text: #0f172a;
+    --muted: #475569;
+    --accent: #0b4f6c;
+    --light: #f8fafc;
+    --border: #e2e8f0;
+    --code: #0b1020;
+  }
+  body {
+    font-family: Arial, Helvetica, sans-serif;
+    color: var(--text);
+    line-height: 1.55;
+    margin: 0;
+    background: white;
+  }
+  header {
+    background: var(--light);
+    border-bottom: 1px solid var(--border);
+    padding: 32px 48px;
+  }
+  header h1 { margin: 0 0 6px 0; font-size: 28px; }
+  header p { margin: 0; color: var(--muted); }
+  main { padding: 24px 48px 64px 48px; }
+  h2 { border-bottom: 2px solid var(--border); padding-bottom: 6px; margin-top: 36px; }
+  h3 { margin-top: 24px; }
+  h4 { margin-top: 18px; }
+  ul { padding-left: 20px; }
+  .toc a { color: var(--accent); text-decoration: none; }
+  .toc a:hover { text-decoration: underline; }
+  .note { background: var(--light); border: 1px solid var(--border); padding: 12px 16px; border-radius: 6px; color: var(--muted); }
+  .code { font-family: "Courier New", monospace; background: var(--code); color: #e2e8f0; padding: 10px 12px; border-radius: 6px; overflow-x: auto; }
+  .k { font-weight: bold; }
+  @media print {
+    header { border-bottom: none; }
+    a { color: black; text-decoration: none; }
+    body { line-height: 1.45; }
+    main { padding: 12px 28px 32px 28px; }
+    h2 { break-before: page; page-break-before: always; }
+    h2#overview { break-before: auto; page-break-before: auto; }
+    h3, h4 { break-after: avoid; page-break-after: avoid; }
+    ul, p { orphans: 3; widows: 3; }
+    .note { page-break-inside: avoid; }
+    .toc { page-break-after: always; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>OK Cuisine - Documentation complete du code et des fonctionnalites</h1>
+  <p>Version de travail - document exhaustif (code, modules, UI, design, export, RGPD, protections)</p>
+</header>
+<main>
+  <div class="note">
+    Ce document est volontairement detaille. Il decrit la structure du projet, chaque module,
+    tous les elements cliquables, le systeme de formation, les exports, le design, et les points de protection
+    (juridique, RGPD, proprietes intellectuelles, limites de responsabilite).
+  </div>
+
+  <h2 id="toc">Sommaire</h2>
+  <ul class="toc">
+    <li><a href="#overview">1. Vue d ensemble</a></li>
+    <li><a href="#architecture">2. Architecture technique</a></li>
+    <li><a href="#ui-shell">3. Coeur UI (index.html)</a></li>
+    <li><a href="#styles">4. Design et style (css/style.css)</a></li>
+    <li><a href="#core-js">5. Coeur logique (app.js, ui.js, storage.js, config.js)</a></li>
+    <li><a href="#modules">6. Modules metiers (detail complet)</a></li>
+    <li><a href="#training">7. Systeme de formation HACCP</a></li>
+    <li><a href="#voice">8. Assistant vocal</a></li>
+    <li><a href="#pdf">9. Exports PDF/CSV/TXT</a></li>
+    <li><a href="#pwa">10. PWA (manifest, service worker)</a></li>
+    <li><a href="#demos">11. Pages annexes (demos, seed, pages HTML)</a></li>
+    <li><a href="#legal">12. Protections legales et RGPD</a></li>
+    <li><a href="#limits">13. Limites, zones en cours, recommandations</a></li>
+    <li><a href="#pdf-export">14. Export en PDF</a></li>
+    <li><a href="#files">15. Walkthrough complet par fichier</a></li>
+    <li><a href="#functions">16. Walkthrough par fonction (detail)</a></li>
+  </ul>
+
+  <h2 id="overview">1. Vue d ensemble</h2>
+  <p>
+    OK Cuisine est une application web monolithique (single page) pour la gestion HACCP en cuisine collective.
+    L interface est contenue dans <span class="k">index.html</span> et chaque module est une section
+    rendue dynamiquement par les scripts JS. La persistance se fait en localStorage.
+  </p>
+  <p>
+    Objectifs principaux:
+  </p>
+  <ul>
+    <li>Conformite HACCP: temperatures, nettoyage, receptions, CCP, tracabilite, allergenes, audits.</li>
+    <li>Gestion complete des registres: inventaire, fournisseurs, menus, journal, alertes, archives DLC.</li>
+    <li>Formation HACCP interne avec progression, quiz, attestations.</li>
+    <li>Assistant vocal pour saisie mains libres.</li>
+    <li>Exports PDF/CSV/TXT pour audits DDPP.</li>
+  </ul>
+
+  <h2 id="architecture">2. Architecture technique</h2>
+  <h3>2.1 Organisation des fichiers</h3>
+  <ul>
+    <li>HTML principal: index.html.</li>
+    <li>CSS global: css/style.css.</li>
+    <li>Modules JS: js/*.js (un module par fonction).</li>
+    <li>Pages demo / outils: demo-selector.html, seed-data.html, controlehaccp.HTML, menu en ligne.html, devenir-fournisseur-demo.html.</li>
+    <li>Manifest et SW: manifest.json, sw.js.</li>
+    <li>Script validation: validate.js.</li>
+  </ul>
+
+  <h3>2.2 Flux principal</h3>
+  <ul>
+    <li>L utilisateur s authentifie via PIN (App.login).</li>
+    <li>Navigation par sidebar (UI + App.navigate).</li>
+    <li>Chaque module appelle Storage pour lire/ecrire en local.</li>
+    <li>Les toasts, modals, badges sont centralises dans UI.</li>
+    <li>PDF export centralise dans PDF.</li>
+  </ul>
+
+  <h3>2.3 Persistence (localStorage)</h3>
+  <p>
+    Les donnees sont stockees localement. Chaque module dispose de fonctions get/save/remove dans storage.js.
+    Avantage: pas besoin de serveur. Inconvenient: pas de sauvegarde cloud.
+  </p>
+
+  <h2 id="ui-shell">3. Coeur UI (index.html)</h2>
+  <h3>3.1 Ecran de connexion</h3>
+  <ul>
+    <li>Champ PIN + clavier numerique.</li>
+    <li>Bouton de validation PIN.</li>
+    <li>Gestion multi-utilisateurs.</li>
+  </ul>
+
+  <h3>3.2 Ecran principal</h3>
+  <ul>
+    <li>Top bar: titre, actions globales, badge alertes.</li>
+    <li>Sidebar: groupes de pages (dashboard, operations, qualite, formation, etc.).</li>
+    <li>Zone contenu: sections <span class="k">page-*</span> injectees par chaque module.</li>
+  </ul>
+
+  <h3>3.3 Elements cliquables globaux</h3>
+  <ul>
+    <li>Boutons de navigation (sidebar).</li>
+    <li>Mode vocal: bouton micro flottant.</li>
+    <li>Toasts et modals: boutons fermer/valider.</li>
+    <li>Badges alertes: acces direct aux alertes.</li>
+  </ul>
+
+  <h2 id="styles">4. Design et style (css/style.css)</h2>
+  <h3>4.1 Direction artistique</h3>
+  <ul>
+    <li>Theme sombre/bleu: fonds #0f0f1a / #1a1a2e.</li>
+    <li>Couleurs d etat: success, warning, danger, info.</li>
+    <li>Contraste fort pour lecture rapide en cuisine.</li>
+  </ul>
+
+  <h3>4.2 Composants stylises</h3>
+  <ul>
+    <li>Cards avec ombre et bords arrondis.</li>
+    <li>Stat cards pour KPI.</li>
+    <li>Tables modernes et badges couleur.</li>
+    <li>Form controls grands et utilisables sur tablette.</li>
+    <li>Animations discretes (hover, transitions).</li>
+  </ul>
+
+  <h3>4.3 Accessibilite</h3>
+  <ul>
+    <li>Tailles de boutons larges.</li>
+    <li>Hierarchie typographique claire.</li>
+    <li>Couleurs semantiques coherentes.</li>
+  </ul>
+
+  <h2 id="core-js">5. Coeur logique</h2>
+  <h3>5.1 app.js</h3>
+  <ul>
+    <li>Initialise tous les modules a l ouverture.</li>
+    <li>Gere la connexion PIN et la session utilisateur.</li>
+    <li>Navigation: switch de page + appel de render() module.</li>
+    <li>Support du mode demo via query params.</li>
+  </ul>
+
+  <h3>5.2 ui.js</h3>
+  <ul>
+    <li>Gestion sidebar (collapse, selection active).</li>
+    <li>Modals: openModal, closeModal, confirm.</li>
+    <li>Toasts: UI.toast(type, message).</li>
+    <li>Helpers: escapeHTML, formatters, badges alertes.</li>
+  </ul>
+
+  <h3>5.3 storage.js</h3>
+  <ul>
+    <li>Centralise l acces aux donnees localStorage.</li>
+    <li>Definit des valeurs par defaut (config, zones, fournisseurs, etc.).</li>
+    <li>CRUD pour chaque module (get/save/remove).</li>
+    <li>Helpers dates: today(), addDays(), formatDate().</li>
+    <li>Alertes automatiques (DLC, non-conformites).</li>
+  </ul>
+
+  <h3>5.4 config.js</h3>
+  <ul>
+    <li>Parametrage etablissement: zones, fournisseurs, produits.</li>
+    <li>Import/Export config.</li>
+    <li>Reset donnees.</li>
+  </ul>
+
+  <h2 id="modules">6. Modules metiers</h2>
+  <p>Chaque module suit le schema: render() + modals + save + export.</p>
+
+  <h3>6.1 Dashboard</h3>
+  <ul>
+    <li>Widgets KPI: temperatures, nettoyages, alertes, etc.</li>
+    <li>Actions rapides (liens vers modules).</li>
+    <li>Gestion drag/drop des widgets.</li>
+  </ul>
+
+  <h3>6.2 Temperatures + CCP</h3>
+  <ul>
+    <li>Saisie des temperatures par zone + statut conforme.</li>
+    <li>Indication min/max selon config.</li>
+    <li>Module CCP: cuisson, refroidissement, remise en temperature.</li>
+    <li>Exports PDF temperatures.</li>
+    <li>Alertes si hors seuil.</li>
+  </ul>
+
+  <h3>6.3 Nettoyage</h3>
+  <ul>
+    <li>Choix zones nettoyees + produit.</li>
+    <li>Historique quotidien.</li>
+    <li>Export PDF nettoyages.</li>
+  </ul>
+
+  <h3>6.4 Receptions</h3>
+  <ul>
+    <li>Controle a reception: fournisseur, lot, DLC, temperature.</li>
+    <li>Statut conforme / non conforme.</li>
+    <li>Alertes si non conforme.</li>
+    <li>Export PDF receptions.</li>
+  </ul>
+
+  <h3>6.5 Inventaire</h3>
+  <ul>
+    <li>Gestion stock par categorie.</li>
+    <li>Suivi DLC et alertes.</li>
+    <li>Export PDF inventaire.</li>
+  </ul>
+
+  <h3>6.6 Alertes</h3>
+  <ul>
+    <li>Liste toutes alertes generes par modules.</li>
+    <li>Actions: marquer lu, resoudre.</li>
+  </ul>
+
+  <h3>6.7 Journal</h3>
+  <ul>
+    <li>Historique actions (connexion, nettoyages, receptions, etc.).</li>
+    <li>Export PDF journal.</li>
+  </ul>
+
+  <h3>6.8 Allergenes</h3>
+  <ul>
+    <li>Matrice allergenes par plat (14 allergenes INCO).</li>
+    <li>Ajout / edition plats.</li>
+    <li>Export PDF matrice.</li>
+  </ul>
+
+  <h3>6.9 Tracabilite</h3>
+  <ul>
+    <li>Etiquettes de deconditionnement (J+3).</li>
+    <li>Plats temoins et registre fournisseurs.</li>
+    <li>Export PDF tracabilite.</li>
+  </ul>
+
+  <h3>6.10 Protocoles HACCP</h3>
+  <ul>
+    <li>Procedures internes: lavage mains, huiles, marche en avant.</li>
+    <li>Regles temperatures et CCP.</li>
+  </ul>
+
+  <h3>6.11 Recettes</h3>
+  <ul>
+    <li>Fiches recettes avec ingredients.</li>
+    <li>Calcul quantites par nombre de couverts.</li>
+    <li>Association allergenes.</li>
+    <li>Base Recettes: recettes-database.js.</li>
+  </ul>
+
+  <h3>6.12 Fournisseurs</h3>
+  <ul>
+    <li>Version simple: fournisseurs.js + base FournisseursDatabase.</li>
+    <li>Version v2: Fournisseurs (departement -> categories).</li>
+    <li>Recherche, filtre, contact email.</li>
+    <li>Ajout fournisseur personnalise.</li>
+  </ul>
+
+  <h3>6.13 Menus</h3>
+  <ul>
+    <li>Generation hebdo de menus avec themes.</li>
+    <li>Gestion allergenes.</li>
+    <li>Export PDF menus.</li>
+  </ul>
+
+  <h3>6.14 Audit</h3>
+  <ul>
+    <li>Analyse sur periode (date debut/fin).</li>
+    <li>Export PDF DDPP complet.</li>
+  </ul>
+
+  <h3>6.15 Simulateur DDPP</h3>
+  <ul>
+    <li>Questionnaire controle hygiene.</li>
+    <li>Score et note DDPP.</li>
+    <li>Export PDF audit.</li>
+  </ul>
+
+  <h3>6.16 Formation (suivi interne)</h3>
+  <ul>
+    <li>Fiches formation personnel.</li>
+    <li>Expiration attestations.</li>
+    <li>Export attestations.</li>
+  </ul>
+
+  <h3>6.17 Centre de formation (centre-formation.js)</h3>
+  <ul>
+    <li>Parcours HACCP modules + quiz.</li>
+    <li>Traqabilite lecons.</li>
+    <li>Attestation PDF (mode simple).</li>
+  </ul>
+
+  <h3>6.18 Centre formation complet (centre-formation-complete.js)</h3>
+  <ul>
+    <li>Version officielle 14h (DREETS/Qualiopi).</li>
+    <li>Nombreux contenus et quiz.</li>
+    <li>Etat actuel: squelette partiel, fonctions en developpement.</li>
+  </ul>
+
+  <h3>6.19 TIAC</h3>
+  <ul>
+    <li>Gestion incidents alimentaires.</li>
+    <li>Declaration ARS, rapports, exports.</li>
+  </ul>
+
+  <h3>6.20 RGPD</h3>
+  <ul>
+    <li>Consentements, registre traitements, DPO.</li>
+    <li>Export suppression donnees.</li>
+  </ul>
+
+  <h3>6.21 Rappels produits</h3>
+  <ul>
+    <li>Suivi lots rappeles.</li>
+    <li>Actions correctives + export.</li>
+  </ul>
+
+  <h3>6.22 PAI</h3>
+  <ul>
+    <li>Gestion allergies individuelles.</li>
+    <li>Protocoles + affiches.</li>
+  </ul>
+
+  <h3>6.23 AGEC</h3>
+  <ul>
+    <li>Suivi dons alimentaires.</li>
+    <li>Plan de reduction du gaspillage.</li>
+  </ul>
+
+  <h3>6.24 Maintenance</h3>
+  <ul>
+    <li>Planning entretien equipements.</li>
+    <li>Export rapports maintenance.</li>
+  </ul>
+
+  <h3>6.25 Analyse risques</h3>
+  <ul>
+    <li>Tableau dangers et mesures preventives.</li>
+    <li>Export registre risques.</li>
+  </ul>
+
+  <h3>6.26 Validation nettoyage</h3>
+  <ul>
+    <li>Tests ATP, visuel, microbiologique.</li>
+    <li>Alertes si non conforme.</li>
+    <li>Export rapports.</li>
+  </ul>
+
+  <h3>6.27 Separation cru/cuit</h3>
+  <ul>
+    <li>Plan de zonage, equipements dedies.</li>
+    <li>Procedures telechargeables.</li>
+  </ul>
+
+  <h3>6.28 Douches et vestiaires</h3>
+  <ul>
+    <li>Checklist installations sanitaires.</li>
+    <li>Alertes si non conforme.</li>
+    <li>Export registres.</li>
+  </ul>
+
+  <h3>6.29 Archivage DLC</h3>
+  <ul>
+    <li>Archivage legal 5 ans.</li>
+    <li>Exports JSON/CSV.</li>
+    <li>Option archivage auto.</li>
+  </ul>
+
+  <h3>6.30 Gaspillage</h3>
+  <ul>
+    <li>Suivi pesees dechets.</li>
+    <li>Stats jour/semaine/mois.</li>
+    <li>Alerte si depasse reference ADEME.</li>
+  </ul>
+
+  <h3>6.31 Couverts</h3>
+  <ul>
+    <li>Enregistrement couverts reels.</li>
+    <li>Prediction automatique basee sur historique.</li>
+    <li>Statistiques semaine/mois.</li>
+  </ul>
+
+  <h3>6.32 Agents</h3>
+  <ul>
+    <li>Gestion personnel non cuisine (agents, maintenance).</li>
+    <li>Fiches completes, secteurs, horaires, pauses.</li>
+    <li>Gestion secteurs personnalisables.</li>
+  </ul>
+
+  <h2 id="training">7. Systeme de formation HACCP</h2>
+  <p>
+    Le module centre-formation.js propose un parcours en ligne structure en cours, lecons et quiz.
+    La progression est stockee en localStorage (training_progress). Chaque lecon validee ajoute
+    une entree d historique avec horodatage et duree. Le quiz calcule un pourcentage et valide
+    la certification. L attestation est generee en HTML et propose un telechargement PDF (TODO jsPDF).
+  </p>
+  <p>
+    Le fichier FORMATION_14H_STATUT_REEL.js documente l etat actuel et les besoins DREETS/Qualiopi.
+    Le fichier centre-formation-complete.js contient un programme 14h complet en cours de finition.
+  </p>
+
+  <h2 id="voice">8. Assistant vocal</h2>
+  <ul>
+    <li>Activation par mot cle (ex: OK Cuisine).</li>
+    <li>Commandes: temperatures, nettoyage, receptions, inventaire, alertes, menus.</li>
+    <li>Guidage conversationnel pour remplir les formulaires.</li>
+    <li>Limite: reconnaissance vocale depend d internet.</li>
+  </ul>
+
+  <h2 id="pdf">9. Exports PDF/CSV/TXT</h2>
+  <ul>
+    <li>Module central PDF (jsPDF) pour temperatures, nettoyages, receptions, inventaire, journal, allergenes, menus, audit, simulateur.</li>
+    <li>Export DDPP complet multi-sections (temperatures, CCP, nettoyage, receptions, menus, alertes).</li>
+    <li>Exports TXT/CSV pour validation nettoyage, separation cru/cuit, archives DLC, douches/vestiaires.</li>
+  </ul>
+
+  <h2 id="pwa">10. PWA (manifest, service worker)</h2>
+  <ul>
+    <li>manifest.json definit nom, icone inline SVG, theme color, mode standalone.</li>
+    <li>sw.js met en cache les ressources essentielles.</li>
+    <li>Strategie network-first avec fallback cache.</li>
+  </ul>
+
+  <h2 id="demos">11. Pages annexes</h2>
+  <h3>11.1 demo-selector.html</h3>
+  <ul>
+    <li>Page de selection de scenario demo.</li>
+    <li>Redirection vers index.html avec param demo.</li>
+  </ul>
+
+  <h3>11.2 seed-data.html</h3>
+  <ul>
+    <li>Outil injection localStorage pour scenarios complets.</li>
+    <li>Genere un an de donnees HACCP pour tests.</li>
+  </ul>
+
+  <h3>11.3 controlehaccp.HTML</h3>
+  <ul>
+    <li>Simulateur d audit HACCP stand-alone.</li>
+    <li>Questions aleatoires et export PDF simple.</li>
+  </ul>
+
+  <h3>11.4 menu en ligne.html</h3>
+  <ul>
+    <li>Generateur de menus V2.5 stand-alone.</li>
+    <li>Theme, collectivite, export PDF avec mise en page.</li>
+  </ul>
+
+  <h3>11.5 devenir-fournisseur-demo.html</h3>
+  <ul>
+    <li>Landing page fournisseurs avec formulaire + paiement simule.</li>
+    <li>LocalStorage pour stocker les inscriptions.</li>
+  </ul>
+
+  <h2 id="legal">12. Protections legales et RGPD</h2>
+  <h3>12.1 Mentions legales</h3>
+  <ul>
+    <li>Raison sociale, SIRET, adresse, contact, hebergeur.</li>
+    <li>Responsable de publication.</li>
+  </ul>
+
+  <h3>12.2 Conditions d utilisation (CGU)</h3>
+  <ul>
+    <li>Nature du service: assistance HACCP, pas garantie absolue de conformite.</li>
+    <li>Limitation de responsabilite en cas d erreur humaine ou usage non conforme.</li>
+    <li>Clause d utilisation loyale et interdiction de copie.</li>
+  </ul>
+
+  <h3>12.3 Confidentialite / RGPD</h3>
+  <ul>
+    <li>Donnees stockees localement (par defaut).</li>
+    <li>Roles et acces aux donnees.</li>
+    <li>Procedure suppression/export des donnees.</li>
+  </ul>
+
+  <h3>12.4 Propriete intellectuelle</h3>
+  <ul>
+    <li>Ajouter copyright sur code et UI.</li>
+    <li>Specifier la licence (proprietaire / commerciale / open-source).</li>
+    <li>Marque et logo proteges.</li>
+  </ul>
+
+  <h3>12.5 Preuve de conformite</h3>
+  <ul>
+    <li>Exports PDF horodates.</li>
+    <li>Traqabilite formation et attestations.</li>
+    <li>Archivage DLC 5 ans.</li>
+  </ul>
+
+  <h2 id="limits">13. Limites et recommandations</h2>
+  <ul>
+    <li>CentreFormationComplete: encore partiellement implemente.</li>
+    <li>Attestation PDF dans centre-formation.js: telechargement jsPDF a finaliser.</li>
+    <li>Reconnaissance vocale depend d internet.</li>
+    <li>LocalStorage non partage entre machines.</li>
+  </ul>
+
+  <h2 id="pdf-export">14. Export en PDF</h2>
+  <p>
+    Ce fichier est concu pour etre imprime en PDF. Ouvrez documentation-ok-cuisine.html
+    dans votre navigateur, puis utilisez Imprimer -> Enregistrer en PDF.
+  </p>
+
+  <h2 id="files">15. Walkthrough complet par fichier</h2>
+
+  <h3>15.1 index.html (structure UI)</h3>
+  <ul>
+    <li>Ecran login: champ PIN, clavier numerique, bouton validation, message d aide.</li>
+    <li>Top bar: nom page active, badge alertes, actions globales.</li>
+    <li>Sidebar: groupes Operations, Qualite, Formation, Administration. Chaque lien appelle App.navigate().</li>
+    <li>Pages internes: chaque section page-XXX est un conteneur vide rempli par render() du module.</li>
+    <li>Voice panel: zone de conversation vocale, boutons start/stop, historique messages.</li>
+    <li>Mic flottant: activation rapide du mode vocal.</li>
+    <li>Modal global: UI.openModal() affiche formulaires et confirmations.</li>
+    <li>Toast global: UI.toast() affiche succes/erreur/infos.</li>
+  </ul>
+
+  <h3>15.2 css/style.css (design)</h3>
+  <ul>
+    <li>Variables CSS: couleurs, radius, ombres, typographie, z-index.</li>
+    <li>Layout: grid principal, sidebar fixe, top bar, zone contenu scrollable.</li>
+    <li>Login: ecran plein, panneau PIN, boutons large usage tactile.</li>
+    <li>Cartes: card, stat-card, badges, highlights.</li>
+    <li>Formulaires: inputs, selects, textareas, validations visuelles.</li>
+    <li>Tables: table, table-container, colonnes fixes, alternance.</li>
+    <li>Modals: overlays, footers, boutons action.</li>
+    <li>Toasts: succes/info/warn/danger.</li>
+    <li>Voice: panel conversation et micro flottant.</li>
+  </ul>
+
+  <h3>15.3 js/app.js (controleur principal)</h3>
+  <ul>
+    <li>init(): charge config, initialise modules, verifie mode demo.</li>
+    <li>login(): verifie PIN, set App.currentUser.</li>
+    <li>logout(): reset session.</li>
+    <li>navigate(pageId): active section page-*, appelle render() du module.</li>
+    <li>setupDemo(): applique scenarios demo si present.</li>
+  </ul>
+
+  <h3>15.4 js/ui.js (helpers UI)</h3>
+  <ul>
+    <li>openModal(title, body, footer): ouvre modal globale.</li>
+    <li>closeModal(): ferme modal.</li>
+    <li>toast(msg, type): notifications.</li>
+    <li>confirm(msg, cb): confirmation utilisateur.</li>
+    <li>updateAlertBadge(): compteur alertes.</li>
+    <li>escapeHTML(): protection injection HTML.</li>
+  </ul>
+
+  <h3>15.5 js/storage.js (localStorage)</h3>
+  <ul>
+    <li>Prefix de stockage commun (okc_).</li>
+    <li>Helpers date: today(), addDays(), formatDate(), formatDateTime().</li>
+    <li>Config: getConfig(), saveConfig().</li>
+    <li>Temperatures: getTemperatures(date), saveTemperature(), removeTemperature().</li>
+    <li>CCP: getCCPRecords(date), saveCCP().</li>
+    <li>Nettoyage: getNettoyages(date), saveNettoyage().</li>
+    <li>Receptions: getReceptions(date), saveReception().</li>
+    <li>Inventaire: getInventaire(), saveInventaireItem().</li>
+    <li>Alertes: getAlertes(), addAlerte(), resolveAlerte().</li>
+    <li>Journal: getJournal(date), saveJournal().</li>
+    <li>Allergenes: getAllergenePlats(), saveAllergenePlat().</li>
+    <li>Tracabilite: getEtiquettes(), saveEtiquette(), getPlatsTemoins().</li>
+    <li>Menus: getMenus(date), saveMenus().</li>
+    <li>Formation: getFormations(), saveFormation().</li>
+    <li>Autres modules: TIAC, RGPD, Rappels, PAI, AGEC, Maintenance, Analyse risques, Validation nettoyage, Separation cru/cuit, Douches, Archives DLC.</li>
+  </ul>
+
+  <h3>15.6 js/config.js (parametrage)</h3>
+  <ul>
+    <li>Gestion zones temperature et nettoyage.</li>
+    <li>Gestion fournisseurs agrees.</li>
+    <li>Import/export config JSON.</li>
+    <li>Reset complet donnees.</li>
+  </ul>
+
+  <h3>15.7 js/dashboard.js</h3>
+  <ul>
+    <li>Widgets KPI: alertes actives, conformites, stats operations.</li>
+    <li>Boutons rapides: acces vers modules critiques.</li>
+    <li>Drag and drop pour reorder widgets.</li>
+  </ul>
+
+  <h3>15.8 js/temperatures.js</h3>
+  <ul>
+    <li>Selection date + liste zones.</li>
+    <li>Bouton + ajouter releve (modal).</li>
+    <li>Actions: enregistrer, supprimer, export PDF.</li>
+    <li>CCP modal: type, produit, temperature, conforme.</li>
+  </ul>
+
+  <h3>15.9 js/nettoyage.js</h3>
+  <ul>
+    <li>Checklist zones + produit de nettoyage.</li>
+    <li>Bouton + ajouter nettoyage.</li>
+    <li>Export PDF journee.</li>
+  </ul>
+
+  <h3>15.10 js/receptions.js</h3>
+  <ul>
+    <li>Formulaire reception (fournisseur, produit, lot, DLC, temperature).</li>
+    <li>Boutons: enregistrer, supprimer, export PDF.</li>
+    <li>Non conformite -> creation alerte.</li>
+  </ul>
+
+  <h3>15.11 js/inventaire.js</h3>
+  <ul>
+    <li>Liste stock par categorie.</li>
+    <li>Ajout produit: nom, categorie, quantite, unite, DLC.</li>
+    <li>Actions: editer, supprimer, export PDF.</li>
+  </ul>
+
+  <h3>15.12 js/alertes.js</h3>
+  <ul>
+    <li>Liste alertes actives/traitees.</li>
+    <li>Action resoudre: commentaire + horodatage.</li>
+  </ul>
+
+  <h3>15.13 js/journal.js</h3>
+  <ul>
+    <li>Historique par date.</li>
+    <li>Export PDF journal.</li>
+  </ul>
+
+  <h3>15.14 js/allergenes.js</h3>
+  <ul>
+    <li>Liste 14 allergenes + matrice par plat.</li>
+    <li>Ajout plat: nom, categorie, allergenes.</li>
+    <li>Export PDF matrice.</li>
+  </ul>
+
+  <h3>15.15 js/tracabilite.js</h3>
+  <ul>
+    <li>Etiquettes deconditionnement J+3.</li>
+    <li>Plats temoins.</li>
+    <li>Fournisseurs registers.</li>
+    <li>Export PDF.</li>
+  </ul>
+
+  <h3>15.16 js/protocoles.js</h3>
+  <ul>
+    <li>Fiches protocole HACCP (lavage mains, huiles, etc.).</li>
+    <li>Affichage des temperatures reglementaires.</li>
+  </ul>
+
+  <h3>15.17 js/recettes.js</h3>
+  <ul>
+    <li>Creation fiche recette.</li>
+    <li>Calcul ingredient par nombre de couverts.</li>
+    <li>Association allergenes.</li>
+  </ul>
+
+  <h3>15.18 js/recettes-database.js</h3>
+  <ul>
+    <li>Base prechargee de recettes.</li>
+    <li>Chaque entree contient nom, categorie, couverts_base, ingredients, allergenes.</li>
+  </ul>
+
+  <h3>15.19 js/fournisseurs.js</h3>
+  <ul>
+    <li>Liste fournisseurs agrees.</li>
+    <li>Ajout/edition fournisseur custom.</li>
+  </ul>
+
+  <h3>15.20 js/fournisseurs-nouveau.js</h3>
+  <ul>
+    <li>Interface departement -> categories -> fournisseurs.</li>
+    <li>Recherche par nom/specialites.</li>
+    <li>Boutons: contacter (mailto), catalogue, selection pour reception.</li>
+  </ul>
+
+  <h3>15.21 js/fournisseurs-database.js</h3>
+  <ul>
+    <li>Base fournisseurs par defaut (liste detaillee).</li>
+  </ul>
+
+  <h3>15.22 js/fournisseurs-database-complet.js</h3>
+  <ul>
+    <li>96 departements + generation automatique fournisseurs.</li>
+    <li>Fonctions de recherche et stats.</li>
+  </ul>
+
+  <h3>15.23 js/fournisseurs-backup.js</h3>
+  <ul>
+    <li>Backup historique (commentaire).</li>
+  </ul>
+
+  <h3>15.24 js/menus.js</h3>
+  <ul>
+    <li>Generation menus multi-semaines.</li>
+    <li>Stockage + export PDF.</li>
+  </ul>
+
+  <h3>15.25 js/audit.js</h3>
+  <ul>
+    <li>Periode d audit (date debut/fin).</li>
+    <li>Export DDPP complet via PDF._exportDDPP().</li>
+  </ul>
+
+  <h3>15.26 js/simulateur.js</h3>
+  <ul>
+    <li>Questionnaire par section.</li>
+    <li>Calcul score, note, historique.</li>
+    <li>Export PDF simulateur.</li>
+  </ul>
+
+  <h3>15.27 js/formation.js</h3>
+  <ul>
+    <li>Registre formations personnel.</li>
+    <li>Dates expiration + alertes.</li>
+    <li>Export attestations.</li>
+  </ul>
+
+  <h3>15.28 js/centre-formation.js</h3>
+  <ul>
+    <li>Parcours e-learning: cours, lecons, quiz.</li>
+    <li>Actions: demarrer, ouvrir lecon, marquer termine, lancer quiz.</li>
+    <li>Attestation: generation HTML + telechargement (TODO jsPDF).</li>
+    <li>Export tracabilite formation en TXT.</li>
+  </ul>
+
+  <h3>15.29 js/centre-formation-complete.js</h3>
+  <ul>
+    <li>Programme 14h complet (contenu riche).</li>
+    <li>Fonctions formateur (en cours).</li>
+    <li>Etat: UI de base, logique incomplete.</li>
+  </ul>
+
+  <h3>15.30 FORMATION_14H_STATUT_REEL.js</h3>
+  <ul>
+    <li>Note technique et feuille de route.</li>
+    <li>Indique ce qui est conforme et ce qui manque pour DREETS.</li>
+  </ul>
+
+  <h3>15.31 js/voice.js</h3>
+  <ul>
+    <li>Reconnaissance vocale + commandes naturelles.</li>
+    <li>Flux conversationnels pour temperatures, nettoyage, receptions.</li>
+    <li>Commandes navigation et actions rapides.</li>
+  </ul>
+
+  <h3>15.32 js/tiac.js</h3>
+  <ul>
+    <li>Declaration TIAC, symptomes, actions, export.</li>
+  </ul>
+
+  <h3>15.33 js/rgpd.js</h3>
+  <ul>
+    <li>Consentements, registre traitements, DPO.</li>
+    <li>Exports et suppression donnees.</li>
+  </ul>
+
+  <h3>15.34 js/rappels-produits.js</h3>
+  <ul>
+    <li>Suivi rappel lot (date, motif, action).</li>
+    <li>Export registre rappels.</li>
+  </ul>
+
+  <h3>15.35 js/pai.js</h3>
+  <ul>
+    <li>Enfants allergiques + protocoles.</li>
+    <li>Affiches et exports.</li>
+  </ul>
+
+  <h3>15.36 js/agec-avance.js</h3>
+  <ul>
+    <li>Dons, associations, plan anti-gaspillage.</li>
+    <li>Exports AGEC.</li>
+  </ul>
+
+  <h3>15.37 js/maintenance.js</h3>
+  <ul>
+    <li>Planning maintenance equipements.</li>
+    <li>Exports maintenance.</li>
+  </ul>
+
+  <h3>15.38 js/analyse-risques.js</h3>
+  <ul>
+    <li>Registre des dangers + mesures.</li>
+    <li>Exports analyse risques.</li>
+  </ul>
+
+  <h3>15.39 js/validation-nettoyage.js</h3>
+  <ul>
+    <li>Tests ATP/visuel/microbiologique.</li>
+    <li>Alertes si non conforme.</li>
+    <li>Exports rapports TXT/CSV.</li>
+  </ul>
+
+  <h3>15.40 js/separation-cru-cuit.js</h3>
+  <ul>
+    <li>Zonage, equipements dedies, procedures ecrites.</li>
+    <li>Exports procedures.</li>
+  </ul>
+
+  <h3>15.41 js/douches-vestiaires.js</h3>
+  <ul>
+    <li>Checklist installations sanitaires.</li>
+    <li>Alertes si non conformes.</li>
+    <li>Exports registres.</li>
+  </ul>
+
+  <h3>15.42 js/archivage-dlc.js</h3>
+  <ul>
+    <li>Archivage donnees HACCP 5 ans.</li>
+    <li>Exports JSON/CSV.</li>
+  </ul>
+
+  <h3>15.43 js/gaspillage.js</h3>
+  <ul>
+    <li>Suivi pesees, stats, graphique 7 jours.</li>
+    <li>Alerte si depasse reference ADEME.</li>
+  </ul>
+
+  <h3>15.44 js/couverts.js</h3>
+  <ul>
+    <li>Enregistrement couverts, prevision auto.</li>
+    <li>Stats semaine/mois, graphique 7 jours.</li>
+  </ul>
+
+  <h3>15.45 js/agents.js</h3>
+  <ul>
+    <li>Gestion agents: fiche, edit, suppression.</li>
+    <li>Gestion secteurs: ajouter, modifier, reset.</li>
+  </ul>
+
+  <h3>15.46 js/pdf.js</h3>
+  <ul>
+    <li>Exports PDF pour chaque module principal.</li>
+    <li>Fonctions utilitaires: _clean, _header, _footer.</li>
+    <li>Exports DDPP et Simulateur complets.</li>
+  </ul>
+
+  <h3>15.47 manifest.json</h3>
+  <ul>
+    <li>Nom, description, theme color, mode standalone.</li>
+    <li>Icone inline SVG.</li>
+  </ul>
+
+  <h3>15.48 sw.js</h3>
+  <ul>
+    <li>Cache des ressources critiques.</li>
+    <li>Network-first + fallback cache.</li>
+  </ul>
+
+  <h3>15.49 validate.js</h3>
+  <ul>
+    <li>Script Node de validation structure.</li>
+    <li>Verifie presence fichiers et routes.</li>
+  </ul>
+
+  <h3>15.50 controlehaccp.HTML</h3>
+  <ul>
+    <li>Simulateur audit simple avec score.</li>
+    <li>Export PDF basique.</li>
+  </ul>
+
+  <h3>15.51 demo-selector.html</h3>
+  <ul>
+    <li>Selection scenario demo + redirection.</li>
+  </ul>
+
+  <h3>15.52 menu en ligne.html</h3>
+  <ul>
+    <li>Generateur menus V2.5 autonome.</li>
+    <li>PDF mise en page par couleurs de colonnes.</li>
+  </ul>
+
+  <h3>15.53 seed-data.html</h3>
+  <ul>
+    <li>Injection complete localStorage (1 an).</li>
+    <li>Scenarios ecoles/lycee/maternelle/creche.</li>
+  </ul>
+
+  <h3>15.54 devenir-fournisseur-demo.html</h3>
+  <ul>
+    <li>Landing page fournisseur + paiement simule.</li>
+    <li>Formulaire complet + stockage local inscription.</li>
+  </ul>
+
+  <h3>15.55 Cartographie des actions cliquables (par module)</h3>
+  <p>Cette section resume les boutons, liens et actions principales, page par page.</p>
+  <ul>
+    <li>Login: clavier numerique, valider PIN, changement utilisateur (selon config).</li>
+    <li>Top bar: badge alertes -> ouvre page alertes.</li>
+    <li>Sidebar: chaque lien -> App.navigate(pageId).</li>
+    <li>Modal global: boutons Annuler/Enregistrer/Confirmer selon module.</li>
+    <li>Dashboard: boutons raccourcis vers modules + drag/drop widgets.</li>
+    <li>Temperatures: date picker, + ajouter releve, supprimer ligne, export PDF.</li>
+    <li>CCP: ouvrir modal CCP, enregistrer controle, export via audit.</li>
+    <li>Nettoyage: date picker, + ajouter nettoyage, export PDF.</li>
+    <li>Receptions: + reception, supprimer, export PDF, creation alerte NC.</li>
+    <li>Inventaire: + produit, editer, supprimer, export PDF.</li>
+    <li>Alertes: resoudre alerte, commenter, marquer lue.</li>
+    <li>Journal: date picker, export PDF.</li>
+    <li>Allergenes: + plat, editer plat, supprimer plat, export PDF matrice.</li>
+    <li>Tracabilite: + etiquette, + plat temoin, export PDF.</li>
+    <li>Protocoles: boutons internes (sections), aucun enregistrement.</li>
+    <li>Recettes: + recette, ouvrir fiche, calculer portions, supprimer.</li>
+    <li>Fournisseurs (v1): + ajouter, editer, supprimer.</li>
+    <li>Fournisseurs (v2): select departement, check categories, recherche, contacter, ouvrir catalogue, selection pour reception.</li>
+    <li>Menus: generer menus, ajouter semaine, export PDF.</li>
+    <li>Audit: date debut/fin, export DDPP.</li>
+    <li>Simulateur: lancer audit, repondre, exporter PDF.</li>
+    <li>Formation: + formation, editer, exporter attestation.</li>
+    <li>Centre formation: choisir cours, ouvrir lecon, marquer terminee, lancer quiz, generer attestation, export tracabilite.</li>
+    <li>TIAC: + declaration, export rapport.</li>
+    <li>RGPD: ajouter consentement, export registre, supprimer donnees.</li>
+    <li>Rappels produits: + rappel, export registre.</li>
+    <li>PAI: + enfant, editer protocole, exporter affiches.</li>
+    <li>AGEC: + don, export AGEC.</li>
+    <li>Maintenance: + intervention, editer, supprimer, export.</li>
+    <li>Analyse risques: + danger, export registre.</li>
+    <li>Validation nettoyage: + controle, exporter rapport, supprimer.</li>
+    <li>Separation cru/cuit: + procedure, editer zonage, editer equipements, exporter procedure.</li>
+    <li>Douches/vestiaires: + controle, exporter, supprimer, editer description.</li>
+    <li>Archivage DLC: archiver maintenant, exporter, toggle auto.</li>
+    <li>Gaspillage: date picker, + pesee, export PDF, graphique 7j.</li>
+    <li>Couverts: + enregistrement, modifier prevision (admin), graphique 7j.</li>
+    <li>Agents: ajouter agent, modifier, supprimer, gerer secteurs.</li>
+    <li>Voice: micro flottant start/stop, commandes vocales pour remplissage forms.</li>
+  </ul>
+
+  <h2 id="functions">16. Walkthrough par fonction (detail)</h2>
+
+  <h3>16.1 app.js</h3>
+  <ul>
+    <li>App.init(): charge config, initialise modules, installe listeners, ouvre page par defaut.</li>
+    <li>App.login(pin): verifie PIN, set App.currentUser, ouvre dashboard.</li>
+    <li>App.logout(): purge session, retour login.</li>
+    <li>App.navigate(pageId): cache toutes les pages, affiche la page cible, appelle Module.render().</li>
+    <li>App.setActiveNav(pageId): marque lien sidebar actif.</li>
+    <li>App.setupDemo(): lit query param demo, injecte data scenario si besoin.</li>
+  </ul>
+
+  <h3>16.2 ui.js</h3>
+  <ul>
+    <li>UI.openModal(title, bodyHTML, footerHTML): construit modal global.</li>
+    <li>UI.closeModal(): ferme modal, nettoie contenu.</li>
+    <li>UI.toast(message, type): affiche notification auto-dismiss.</li>
+    <li>UI.confirm(message, onYes): confirm standard, callback yes.</li>
+    <li>UI.updateAlertBadge(): calcule alertes non lues, met a jour badge.</li>
+    <li>UI.switchPage(pageId): helper pour pages sans App.navigate direct.</li>
+    <li>UI.escapeHTML(text): neutralise caracteres HTML.</li>
+    <li>UI.emptyState(icon, message): bloc vide standardise.</li>
+  </ul>
+
+  <h3>16.3 storage.js</h3>
+  <ul>
+    <li>Storage.save(key, data) / Storage.load(key, def): base de persistence.</li>
+    <li>Storage.today(): date ISO du jour (YYYY-MM-DD).</li>
+    <li>Storage.formatDate(date): format humain fr-FR.</li>
+    <li>Storage.formatDateTime(ts): format date + heure.</li>
+    <li>Storage.uid(): id unique.</li>
+    <li>Storage.addAlerte(alerte): ajoute alerte + horodatage.</li>
+    <li>Storage.getAlertes(): retourne toutes alertes.</li>
+    <li>Storage.saveTemperature(record) / getTemperatures(date): CRUD temperatures.</li>
+    <li>Storage.saveCCP(record) / getCCPRecords(date): CRUD CCP.</li>
+    <li>Storage.saveNettoyage(record) / getNettoyages(date): CRUD nettoyages.</li>
+    <li>Storage.saveReception(record) / getReceptions(date): CRUD receptions.</li>
+    <li>Storage.saveInventaireItem(item) / getInventaire(): CRUD inventaire.</li>
+    <li>Storage.saveFormation(record) / getFormations(): CRUD formations.</li>
+    <li>Storage.saveEtiquette(record) / getEtiquettes(): CRUD etiquettes.</li>
+    <li>Storage.saveSeparationPlan(plan) / getSeparationPlans(): CRUD plans cru/cuit.</li>
+    <li>Storage.saveValidationNettoyage(record) / getValidationNettoyages(): CRUD validations.</li>
+    <li>Storage.saveDoushesVestiaires(record) / getDoushesVestiaires(): CRUD controles sanitaires.</li>
+    <li>Storage.saveArchiveDLC(record) / getArchivesDLC(): CRUD archives.</li>
+  </ul>
+
+  <h3>16.4 pdf.js</h3>
+  <ul>
+    <li>PDF.export(type): router d export.</li>
+    <li>PDF._clean(text): retire emojis/char Unicode non supportes.</li>
+    <li>PDF._header(doc, title): header commun (etablissement + date).</li>
+    <li>PDF._footer(doc): pagination + date.</li>
+    <li>PDF._exportTemperatures(): export relevés temperatures.</li>
+    <li>PDF._exportNettoyage(): export nettoyage.</li>
+    <li>PDF._exportReceptions(): export receptions.</li>
+    <li>PDF._exportInventaire(): export inventaire.</li>
+    <li>PDF._exportJournal(): export journal.</li>
+    <li>PDF._exportAllergenes(): export matrice allergenes.</li>
+    <li>PDF._exportTracabilite(): export etiquettes + fournisseurs.</li>
+    <li>PDF._exportProtocoles(): export temperatures reglementaires + CCP.</li>
+    <li>PDF._exportMenus(): export menus.</li>
+    <li>PDF._exportDDPP(): dossier complet controle sanitaire.</li>
+    <li>PDF._exportSimulateur(): rapport simulateur DDPP.</li>
+    <li>PDF.downloadText(filename, content): export TXT.</li>
+    <li>PDF.downloadJSON(filename, data): export JSON.</li>
+  </ul>
+
+  <h3>16.5 temperatures.js</h3>
+  <ul>
+    <li>Temperatures.render(): construit page, stats, tableau.</li>
+    <li>Temperatures.showAddModal(): modal saisie temperature.</li>
+    <li>Temperatures.saveFromModal(): validation + Storage.saveTemperature().</li>
+    <li>Temperatures.deleteRecord(id): suppression ligne.</li>
+    <li>Temperatures.showCCPModal(): modal CCP.</li>
+    <li>Temperatures.saveCCPFromModal(): enregistre CCP + alertes si NC.</li>
+  </ul>
+
+  <h3>16.6 nettoyage.js</h3>
+  <ul>
+    <li>Nettoyage.render(): page checklist + historique.</li>
+    <li>Nettoyage.showAddModal(): selection zones + produit.</li>
+    <li>Nettoyage.saveFromModal(): enregistre nettoyage + journal.</li>
+  </ul>
+
+  <h3>16.7 receptions.js</h3>
+  <ul>
+    <li>Receptions.render(): liste, stats, badges conformite.</li>
+    <li>Receptions.showAddModal(): form reception.</li>
+    <li>Receptions.saveFromModal(): enregistre + alerte si NC.</li>
+    <li>Receptions.deleteRecord(id): suppression.</li>
+  </ul>
+
+  <h3>16.8 inventaire.js</h3>
+  <ul>
+    <li>Inventaire.render(): inventaire par categorie.</li>
+    <li>Inventaire.showAddModal(): ajout produit.</li>
+    <li>Inventaire.saveFromModal(): enregistre item.</li>
+    <li>Inventaire.deleteItem(id): suppression.</li>
+  </ul>
+
+  <h3>16.9 alertes.js</h3>
+  <ul>
+    <li>Alertes.render(): liste alertes avec statuts.</li>
+    <li>Alertes.resolveAlert(id): marque resolue + commentaire.</li>
+    <li>Alertes.deleteAlert(id): suppression si besoin.</li>
+  </ul>
+
+  <h3>16.10 journal.js</h3>
+  <ul>
+    <li>Journal.render(): liste actions par date.</li>
+    <li>Journal.log(type, message, data): journalisation globale.</li>
+  </ul>
+
+  <h3>16.11 allergenes.js</h3>
+  <ul>
+    <li>Allergenes.render(): matrice + liste plats.</li>
+    <li>Allergenes.showAddModal(): ajoute plat + allergenes.</li>
+    <li>Allergenes.saveFromModal(): enregistre plat.</li>
+  </ul>
+
+  <h3>16.12 tracabilite.js</h3>
+  <ul>
+    <li>Tracabilite.render(): etiquettes, plats temoins, fournisseurs.</li>
+    <li>Tracabilite.showEtiquetteModal(): creation etiquette.</li>
+    <li>Tracabilite.saveEtiquette(): enregistre etiquette.</li>
+    <li>Tracabilite.showPlatTemoinModal(): creation plat temoin.</li>
+    <li>Tracabilite.savePlatTemoin(): enregistre plat temoin.</li>
+  </ul>
+
+  <h3>16.13 menus.js</h3>
+  <ul>
+    <li>Menus.render(): page generation et historique.</li>
+    <li>Menus.generateMenus(): cree menus selon theme/collectivite.</li>
+    <li>Menus.saveMenus(): persiste menus.</li>
+  </ul>
+
+  <h3>16.14 simulateur.js</h3>
+  <ul>
+    <li>Simulateur.startAudit(): initialise audit.</li>
+    <li>Simulateur.render(): affiche sections/questions.</li>
+    <li>Simulateur._calculateScores(): calcule note globale.</li>
+    <li>Simulateur.exportPDF(): PDF simulateur via PDF._exportSimulateur().</li>
+  </ul>
+
+  <h3>16.15 formation.js</h3>
+  <ul>
+    <li>Formation.render(): liste formations personnel.</li>
+    <li>Formation.showAddModal(): ajout formation.</li>
+    <li>Formation.saveFromModal(): enregistre.</li>
+    <li>Formation.exportAttestation(): export attestation.</li>
+  </ul>
+
+  <h3>16.16 centre-formation.js</h3>
+  <ul>
+    <li>CentreFormation.render(): hero + cartes cours.</li>
+    <li>CentreFormation.selectCourse(): change cours.</li>
+    <li>CentreFormation.openLesson(): modal lecon.</li>
+    <li>CentreFormation.completeLesson(): trace fin lecon.</li>
+    <li>CentreFormation.openQuiz(): modal quiz.</li>
+    <li>CentreFormation.submitQuiz(): calcule score + statut.</li>
+    <li>CentreFormation.generateAttestation(): verifie progression.</li>
+    <li>CentreFormation.exportTracabilite(): export TXT.</li>
+  </ul>
+
+  <h3>16.17 validation-nettoyage.js</h3>
+  <ul>
+    <li>ValidationNettoyage.render(): stats + historique.</li>
+    <li>ValidationNettoyage.showAddModal(): choix test.</li>
+    <li>ValidationNettoyage.updateTestFields(): adapte champs.</li>
+    <li>ValidationNettoyage.saveValidation(): enregistre + alerte si NC.</li>
+    <li>ValidationNettoyage.downloadRapport(): export TXT.</li>
+    <li>ValidationNettoyage.exportRapports(): export CSV.</li>
+  </ul>
+
+  <h3>16.18 separation-cru-cuit.js</h3>
+  <ul>
+    <li>SeparationCruCuit.render(): zonage + procedures + equipements.</li>
+    <li>SeparationCruCuit.showAddProcedureModal(): nouvelle procedure.</li>
+    <li>SeparationCruCuit.saveProcedure(): enregistre plan.</li>
+    <li>SeparationCruCuit.editZonage(): edite zones.</li>
+    <li>SeparationCruCuit.saveZonage(): sauvegarde zones.</li>
+    <li>SeparationCruCuit.editEquipements(): edite tableau equipements.</li>
+    <li>SeparationCruCuit.saveEquipements(): sauvegarde.</li>
+    <li>SeparationCruCuit.downloadProcedure(): export TXT.</li>
+  </ul>
+
+  <h3>16.19 douches-vestiaires.js</h3>
+  <ul>
+    <li>DoushesVestiaires.render(): checklist + historique.</li>
+    <li>DoushesVestiaires.showAddCheckModal(): modal controle.</li>
+    <li>DoushesVestiaires.saveCheck(): enregistre + alerte si NC.</li>
+    <li>DoushesVestiaires.editDescription(): description installations.</li>
+    <li>DoushesVestiaires.exportRapports(): export CSV.</li>
+  </ul>
+
+  <h3>16.20 archivage-dlc.js</h3>
+  <ul>
+    <li>ArchivageDLC.render(): stats + archives par annee.</li>
+    <li>ArchivageDLC.archiveNow(): snapshot des donnees critiques.</li>
+    <li>ArchivageDLC.downloadArchive(): export JSON.</li>
+    <li>ArchivageDLC.exportArchives(): export CSV.</li>
+    <li>ArchivageDLC.toggleAutoArchive(): active/desactive.</li>
+  </ul>
+
+  <h3>16.21 gaspillage.js</h3>
+  <ul>
+    <li>Gaspillage.render(): stats + chart + table.</li>
+    <li>Gaspillage.showAddModal(): pesee dechets.</li>
+    <li>Gaspillage.saveFromModal(): enregistre + alerte si depassement.</li>
+    <li>Gaspillage.getStats(period): stats semaine/mois/annee.</li>
+  </ul>
+
+  <h3>16.22 couverts.js</h3>
+  <ul>
+    <li>Couverts.render(): previsions + historique + chart.</li>
+    <li>Couverts.showAddModal(): saisie couverts reels.</li>
+    <li>Couverts.saveFromModal(): enregistre ou met a jour.</li>
+    <li>Couverts.showPrevisionModal(): admin prevision manuelle.</li>
+    <li>Couverts.getPrediction(date): moyenne 8 semaines.</li>
+  </ul>
+
+  <h3>16.23 agents.js</h3>
+  <ul>
+    <li>Agents.render(): liste agents + stats.</li>
+    <li>Agents.showFicheAgent(): fiche detaillee.</li>
+    <li>Agents.showEditModal(): edition agent.</li>
+    <li>Agents.saveEditModal(): enregistre edition.</li>
+    <li>Agents.showAddAgentModal(): creation agent.</li>
+    <li>Agents.saveAddAgent(): ajoute agent.</li>
+    <li>Agents.showGestionSecteursModal(): gestion secteurs.</li>
+    <li>Agents.saveAddSecteur()/saveEditSecteur()/deleteSecteur(): CRUD secteurs.</li>
+  </ul>
+
+  <h3>16.24 Inventaire des fonctions (noms exacts)</h3>
+  <p>Liste des methodes et fonctions nommees par module, dans le code.</p>
+
+  <h4>16.24.1 js/config.js</h4>
+  <ul>
+    <li>render()</li>
+    <li>saveEtab()</li>
+    <li>addZoneTemp()</li>
+    <li>removeZoneTemp()</li>
+    <li>addZoneNet()</li>
+    <li>removeZoneNet()</li>
+    <li>addProdNet()</li>
+    <li>removeProdNet()</li>
+    <li>addCatInv()</li>
+    <li>removeCatInv()</li>
+    <li>showAddUserModal()</li>
+    <li>saveUser()</li>
+    <li>removeUser()</li>
+    <li>exportData()</li>
+    <li>importData()</li>
+  </ul>
+
+  <h4>16.24.2 js/dashboard.js</h4>
+  <ul>
+    <li>getWidgetCatalog()</li>
+    <li>getLayout()</li>
+    <li>saveLayout()</li>
+    <li>renderWidgetCard()</li>
+    <li>bindDashboardInteractions()</li>
+    <li>_bindNavDraggables()</li>
+    <li>_bindGridDraggables()</li>
+    <li>_startLongPressDrag()</li>
+    <li>_beginDrag()</li>
+    <li>_createWidgetGhost()</li>
+    <li>_handleDragMove()</li>
+    <li>_handleDragEnd()</li>
+    <li>_isPointInRect()</li>
+    <li>render()</li>
+  </ul>
+
+  <h4>16.24.3 js/protocoles.js</h4>
+  <ul>
+    <li>render()</li>
+    <li>switchSection()</li>
+    <li>_renderSection()</li>
+    <li>_renderVueEnsemble()</li>
+    <li>_renderTemperaturesRef()</li>
+    <li>_renderPND()</li>
+    <li>_renderHuiles()</li>
+    <li>_renderHuilesTable()</li>
+    <li>showAddHuileModal()</li>
+    <li>saveHuile()</li>
+    <li>_renderLavageMains()</li>
+    <li>_renderMarcheAvant()</li>
+  </ul>
+
+  <h4>16.24.4 js/recettes.js</h4>
+  <ul>
+    <li>init()</li>
+    <li>render()</li>
+    <li>_renderRecettes()</li>
+    <li>showAddModal()</li>
+    <li>_addIngredientRow()</li>
+    <li>_collectIngredients()</li>
+    <li>saveRecette()</li>
+    <li>editRecette()</li>
+    <li>saveEditRecette()</li>
+    <li>showCalculModal()</li>
+    <li>_updateCalcul()</li>
+    <li>_renderCalculResult()</li>
+    <li>getRecettesForProduit()</li>
+  </ul>
+
+  <h4>16.24.5 js/fournisseurs.js</h4>
+  <ul>
+    <li>init()</li>
+    <li>render()</li>
+    <li>toggleCategory()</li>
+    <li>_getExternalFournisseursByDept()</li>
+    <li>_renderFournisseursByCategory()</li>
+    <li>_renderFournisseurCard()</li>
+    <li>showContactModal()</li>
+    <li>sendContactEmail()</li>
+    <li>selectForOrder()</li>
+    <li>showAddCustomModal()</li>
+    <li>saveCustomFournisseur()</li>
+  </ul>
+
+  <h4>16.24.6 js/audit.js</h4>
+  <ul>
+    <li>init()</li>
+    <li>render()</li>
+    <li>_renderAlertSection()</li>
+    <li>_collectTemperatures()</li>
+    <li>_renderTemperatureSection()</li>
+    <li>_collectNettoyage()</li>
+    <li>_checkNettoyageAlerts()</li>
+    <li>_renderNettoyageSection()</li>
+    <li>_collectReceptions()</li>
+    <li>_renderTracabiliteSection()</li>
+    <li>_renderMenusSection()</li>
+    <li>_getDateRange()</li>
+    <li>_setPeriod()</li>
+    <li>exportDDPP()</li>
+  </ul>
+
+  <h4>16.24.7 js/formation.js</h4>
+  <ul>
+    <li>init()</li>
+    <li>render()</li>
+    <li>_renderExpiringAlerts()</li>
+    <li>_renderByType()</li>
+    <li>_getStatus()</li>
+    <li>_statusBadge()</li>
+    <li>_getExpiringFormations()</li>
+    <li>_countExpiring()</li>
+    <li>showAddModal()</li>
+    <li>saveFormation()</li>
+    <li>showDetail()</li>
+    <li>deleteFormation()</li>
+    <li>downloadAttestation()</li>
+    <li>exportAttestation()</li>
+  </ul>
+
+  <h4>16.24.8 js/voice.js</h4>
+  <ul>
+    <li>init()</li>
+    <li>_loadVoice()</li>
+    <li>toggle()</li>
+    <li>activate()</li>
+    <li>activateAlwaysOn()</li>
+    <li>deactivate()</li>
+    <li>_startKeepAlive()</li>
+    <li>_stopKeepAlive()</li>
+    <li>_startListening()</li>
+    <li>_stopListening()</li>
+    <li>_onResult()</li>
+    <li>_onError()</li>
+    <li>_onEnd()</li>
+    <li>_matchWakeWord()</li>
+    <li>_enterCommandMode()</li>
+    <li>_parseCommand()</li>
+    <li>_match()</li>
+    <li>speak()</li>
+    <li>_startFlow()</li>
+    <li>_handleFlowResponse()</li>
+    <li>_handleTempResponse()</li>
+    <li>_handleNettoyageResponse()</li>
+    <li>_handleReceptionResponse()</li>
+    <li>_handleInventaireResponse()</li>
+    <li>_handleAlerteResponse()</li>
+    <li>_handleExportResponse()</li>
+    <li>_handleCCPCuissonResponse()</li>
+    <li>_handleCCPRefroidissementResponse()</li>
+    <li>_handleCCPRemiseTempResponse()</li>
+    <li>_handleHuileResponse()</li>
+    <li>_handleEtiquetteResponse()</li>
+    <li>_handlePlatTemoinResponse()</li>
+    <li>_handleMenuGenerationResponse()</li>
+    <li>_handleSimulateurLaunchResponse()</li>
+    <li>_isYes()</li>
+    <li>_isNo()</li>
+    <li>_extractNumber()</li>
+    <li>_findZone()</li>
+    <li>_findInList()</li>
+    <li>_fuzzyMatch()</li>
+    <li>_updateStatus()</li>
+    <li>_updateUI()</li>
+    <li>_showPanel()</li>
+    <li>_hidePanel()</li>
+    <li>_showCommands()</li>
+    <li>_showConversation()</li>
+    <li>_addConversationMessage()</li>
+    <li>_exitCommandMode()</li>
+    <li>triggerCommand()</li>
+    <li>cancel()</li>
+    <li>closePanelOnly()</li>
+  </ul>
+
+  <h4>16.24.9 js/tiac.js</h4>
+  <ul>
+    <li>init()</li>
+    <li>render()</li>
+    <li>_renderIncidents()</li>
+    <li>_getColor()</li>
+    <li>showAddModal()</li>
+    <li>saveIncident()</li>
+    <li>showEnquete()</li>
+    <li>saveEnquete()</li>
+    <li>closeIncident()</li>
+    <li>showDetail()</li>
+    <li>exportIncident()</li>
+    <li>exportDDPP()</li>
+  </ul>
+
+  <h4>16.24.10 js/rgpd.js</h4>
+  <ul>
+    <li>render()</li>
+    <li>_renderTabContent()</li>
+    <li>_renderConsentement()</li>
+    <li>_renderRegistre()</li>
+    <li>_renderDPO()</li>
+    <li>_renderExportSuppression()</li>
+    <li>showConsentementModal()</li>
+    <li>saveConsentement()</li>
+    <li>showConsentDetail()</li>
+    <li>revokeConsent()</li>
+    <li>addTraitement()</li>
+    <li>saveTraitement()</li>
+    <li>editDPO()</li>
+    <li>saveDPO()</li>
+    <li>showExportUserModal()</li>
+    <li>exportUserData()</li>
+  </ul>
+
+  <h4>16.24.11 js/rappels-produits.js</h4>
+  <ul>
+    <li>init()</li>
+    <li>render()</li>
+    <li>_renderRappels()</li>
+    <li>showAddModal()</li>
+    <li>saveRappel()</li>
+    <li>validateRetrait()</li>
+    <li>saveTraceRetrait()</li>
+    <li>resolveRappel()</li>
+    <li>showDetail()</li>
+    <li>exportRappel()</li>
+    <li>exportRappels()</li>
+  </ul>
+
+  <h4>16.24.12 js/pai.js</h4>
+  <ul>
+    <li>render()</li>
+    <li>_renderTabContent()</li>
+    <li>_renderEnfants()</li>
+    <li>_renderAlertes()</li>
+    <li>_renderProtocoles()</li>
+    <li>showAddEnfantModal()</li>
+    <li>saveEnfant()</li>
+    <li>showDetail()</li>
+    <li>downloadPAI()</li>
+    <li>editEnfant()</li>
+    <li>deleteEnfant()</li>
+    <li>exportPAIsPDF()</li>
+    <li>printAffichageCuisine()</li>
+  </ul>
+
+  <h4>16.24.13 js/agec-avance.js</h4>
+  <ul>
+    <li>render()</li>
+    <li>_renderTabContent()</li>
+    <li>_renderDons()</li>
+    <li>_renderAssociations()</li>
+    <li>_renderPlanAction()</li>
+    <li>_renderStats()</li>
+    <li>showAddDonModal()</li>
+    <li>saveDon()</li>
+    <li>showAddAssociationModal()</li>
+    <li>saveAssociation()</li>
+    <li>editPlanAction()</li>
+    <li>savePlanAction()</li>
+    <li>showDonDetail()</li>
+    <li>deleteDon()</li>
+    <li>deleteAssociation()</li>
+  </ul>
+
+  <h4>16.24.14 js/maintenance.js</h4>
+  <ul>
+    <li>render()</li>
+    <li>_renderCalendrier()</li>
+    <li>_renderHistorique()</li>
+    <li>showAddModal()</li>
+    <li>saveMaintenance()</li>
+    <li>validateMaintenance()</li>
+    <li>saveMaintainanceCompletee()</li>
+    <li>deleteMaintenance()</li>
+    <li>exportCalendrier()</li>
+  </ul>
+
+  <h4>16.24.15 js/analyse-risques.js</h4>
+  <ul>
+    <li>render()</li>
+    <li>showAddModal()</li>
+    <li>addRisqueField()</li>
+    <li>saveAnalyse()</li>
+    <li>editAnalyse()</li>
+    <li>deleteAnalyse()</li>
+    <li>downloadAnalyse()</li>
+    <li>exportAnalyses()</li>
+  </ul>
+
+  <h4>16.24.16 js/alertes.js</h4>
+  <ul>
+    <li>render()</li>
+    <li>_renderAlertItem()</li>
+    <li>showAddModal()</li>
+    <li>saveFromModal()</li>
+    <li>showResolveModal()</li>
+    <li>resolve()</li>
+  </ul>
+
+  <h4>16.24.17 js/journal.js</h4>
+  <ul>
+    <li>init()</li>
+    <li>log()</li>
+    <li>render()</li>
+    <li>changeDate()</li>
+  </ul>
+
+  <h4>16.24.18 js/allergenes.js</h4>
+  <ul>
+    <li>render()</li>
+    <li>_renderPlats()</li>
+    <li>showAddPlatModal()</li>
+    <li>savePlat()</li>
+    <li>editPlat()</li>
+    <li>saveEditPlat()</li>
+    <li>showMatriceModal()</li>
+    <li>showProduitsAllergene()</li>
+  </ul>
+
+  <h4>16.24.19 js/tracabilite.js</h4>
+  <ul>
+    <li>init()</li>
+    <li>render()</li>
+    <li>switchTab()</li>
+    <li>_renderTabContent()</li>
+    <li>_renderEtiquettes()</li>
+    <li>_renderEtiquettesTable()</li>
+    <li>showAddEtiquetteModal()</li>
+    <li>saveEtiquette()</li>
+    <li>_renderFournisseurs()</li>
+    <li>_renderFournisseursTable()</li>
+    <li>showAddFournisseurModal()</li>
+    <li>saveFournisseur()</li>
+    <li>removeFournisseur()</li>
+    <li>_renderPlatsTemoins()</li>
+    <li>_renderPlatsTemoinsTable()</li>
+    <li>showAddPlatTemoinModal()</li>
+    <li>savePlatTemoin()</li>
+  </ul>
+
+  <h4>16.24.20 js/menus.js</h4>
+  <ul>
+    <li>init()</li>
+    <li>render()</li>
+    <li>_renderSavedMenus()</li>
+    <li>_renderHistorique()</li>
+    <li>changeDate()</li>
+    <li>showGenerateModal()</li>
+    <li>generateMenus()</li>
+    <li>_adaptForCollectivite()</li>
+    <li>_collectAllergenes()</li>
+    <li>deleteMenu()</li>
+    <li>exportMenuPDF()</li>
+    <li>showCreateCustomMenuModal()</li>
+    <li>_toggleCustomInput()</li>
+    <li>_getMenuValue()</li>
+    <li>saveCustomMenu()</li>
+  </ul>
+
+  <h4>16.24.21 js/temperatures.js</h4>
+  <ul>
+    <li>init()</li>
+    <li>render()</li>
+    <li>switchTab()</li>
+    <li>_renderStockageTab()</li>
+    <li>_renderZoneCards()</li>
+    <li>_renderTable()</li>
+    <li>_renderCCPTab()</li>
+    <li>_renderCCPTable()</li>
+    <li>changeDate()</li>
+    <li>showAddModal()</li>
+    <li>saveFromModal()</li>
+    <li>showCCPModal()</li>
+    <li>_updateCCPInfo()</li>
+    <li>saveCCP()</li>
+  </ul>
+
+  <h4>16.24.22 js/nettoyage.js</h4>
+  <ul>
+    <li>init()</li>
+    <li>render()</li>
+    <li>_renderTable()</li>
+    <li>changeDate()</li>
+    <li>quickClean()</li>
+    <li>saveQuickClean()</li>
+    <li>showAddModal()</li>
+    <li>saveFromModal()</li>
+  </ul>
+
+  <h4>16.24.23 js/receptions.js</h4>
+  <ul>
+    <li>init()</li>
+    <li>render()</li>
+    <li>_renderTable()</li>
+    <li>changeDate()</li>
+    <li>showAddModal()</li>
+    <li>saveFromModal()</li>
+    <li>showDetail()</li>
+  </ul>
+
+  <h4>16.24.24 js/inventaire.js</h4>
+  <ul>
+    <li>render()</li>
+    <li>_renderGroups()</li>
+    <li>adjustQty()</li>
+    <li>showAddModal()</li>
+    <li>saveFromModal()</li>
+    <li>editItem()</li>
+    <li>saveEdit()</li>
+  </ul>
+
+  <h4>16.24.25 js/validation-nettoyage.js</h4>
+  <ul>
+    <li>render()</li>
+    <li>showAddModal()</li>
+    <li>updateTestFields()</li>
+    <li>saveValidation()</li>
+    <li>downloadRapport()</li>
+    <li>deleteValidation()</li>
+    <li>exportRapports()</li>
+  </ul>
+
+  <h4>16.24.26 js/separation-cru-cuit.js</h4>
+  <ul>
+    <li>render()</li>
+    <li>showAddProcedureModal()</li>
+    <li>saveProcedure()</li>
+    <li>editZonage()</li>
+    <li>saveZonage()</li>
+    <li>editEquipements()</li>
+    <li>saveEquipements()</li>
+    <li>downloadProcedure()</li>
+    <li>deleteProcedure()</li>
+    <li>editLocalMap()</li>
+  </ul>
+
+  <h4>16.24.27 js/douches-vestiaires.js</h4>
+  <ul>
+    <li>render()</li>
+    <li>showAddCheckModal()</li>
+    <li>saveCheck()</li>
+    <li>editDescription()</li>
+    <li>saveDescription()</li>
+    <li>downloadCheck()</li>
+    <li>deleteCheck()</li>
+    <li>exportRapports()</li>
+  </ul>
+
+  <h4>16.24.28 js/archivage-dlc.js</h4>
+  <ul>
+    <li>render()</li>
+    <li>archiveNow()</li>
+    <li>downloadArchive()</li>
+    <li>exportArchives()</li>
+    <li>toggleAutoArchive()</li>
+  </ul>
+
+  <h4>16.24.29 js/gaspillage.js</h4>
+  <ul>
+    <li>init()</li>
+    <li>render()</li>
+    <li>_getColorClass()</li>
+    <li>_getColorVar()</li>
+    <li>_getChartData()</li>
+    <li>_renderChart()</li>
+    <li>_renderTable()</li>
+    <li>changeDate()</li>
+    <li>showAddModal()</li>
+    <li>_updatePreview()</li>
+    <li>saveFromModal()</li>
+    <li>_calcStats()</li>
+    <li>getStats()</li>
+    <li>getPDFData()</li>
+  </ul>
+
+  <h4>16.24.30 js/couverts.js</h4>
+  <ul>
+    <li>init()</li>
+    <li>render()</li>
+    <li>_computeStats()</li>
+    <li>_getHistorique()</li>
+    <li>_renderBarChart()</li>
+    <li>_renderHistoriqueTable()</li>
+    <li>getPrediction()</li>
+    <li>getAverages()</li>
+    <li>showAddModal()</li>
+    <li>saveFromModal()</li>
+    <li>showPrevisionModal()</li>
+    <li>_updatePrevisionInfo()</li>
+    <li>savePrevision()</li>
+    <li>_formatDateISO()</li>
+  </ul>
+
+  <h4>16.24.31 js/agents.js</h4>
+  <ul>
+    <li>getDefaultAgents()</li>
+    <li>getDefaultSecteurs()</li>
+    <li>getAllSecteurs()</li>
+    <li>saveSecteurs()</li>
+    <li>getAgents()</li>
+    <li>saveAgents()</li>
+    <li>render()</li>
+    <li>showFicheAgent()</li>
+    <li>showEditModal()</li>
+    <li>saveEditModal()</li>
+    <li>showAddAgentModal()</li>
+    <li>saveAddAgent()</li>
+    <li>deleteAgent()</li>
+    <li>_toggleCustomSchedule()</li>
+    <li>_toggleCustomFonction()</li>
+    <li>showGestionSecteursModal()</li>
+    <li>showAddSecteurModal()</li>
+    <li>saveAddSecteur()</li>
+    <li>showEditSecteurModal()</li>
+    <li>saveEditSecteur()</li>
+    <li>deleteSecteur()</li>
+    <li>resetSecteursToDefault()</li>
+  </ul>
+
+  <h4>16.24.32 js/simulateur.js</h4>
+  <ul>
+    <li>init()</li>
+    <li>render()</li>
+    <li>_renderStartScreen()</li>
+    <li>startAudit()</li>
+    <li>_autoCheckQuestion()</li>
+    <li>_renderAuditScreen()</li>
+    <li>_renderGlobalScore()</li>
+    <li>_calculateScores()</li>
+    <li>_sectionScore()</li>
+    <li>_renderSection()</li>
+    <li>_toggleSection()</li>
+    <li>_renderQuestion()</li>
+    <li>_setAnswer()</li>
+    <li>_setField()</li>
+    <li>_renderNonConformites()</li>
+    <li>_renderNCItem()</li>
+    <li>finalizeAudit()</li>
+    <li>_renderHistory()</li>
+    <li>resetAudit()</li>
+    <li>loadAudit()</li>
+    <li>_saveHistory()</li>
+    <li>_loadHistory()</li>
+    <li>_saveCurrentAudit()</li>
+    <li>exportPDF()</li>
+  </ul>
+
+  <h4>16.24.33 js/centre-formation.js</h4>
+  <ul>
+    <li>init()</li>
+    <li>render()</li>
+    <li>selectCourse()</li>
+    <li>openLesson()</li>
+    <li>completeLesson()</li>
+    <li>openQuiz()</li>
+    <li>submitQuiz()</li>
+    <li>generateAttestation()</li>
+    <li>_generateAttestationPDF()</li>
+    <li>_downloadAttestationPDF()</li>
+    <li>_saveAttestationRecord()</li>
+    <li>_renderCourseCard()</li>
+    <li>_renderCourseDetail()</li>
+    <li>_getCourse()</li>
+    <li>_getProgressData()</li>
+    <li>_saveProgress()</li>
+    <li>_getUserProgress()</li>
+    <li>_getCourseProgress()</li>
+    <li>_getProgressPercent()</li>
+    <li>_isCourseComplete()</li>
+    <li>_getStats()</li>
+    <li>exportTracabilite()</li>
+  </ul>
+</main>
+</body>
+</html>

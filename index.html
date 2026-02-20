@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#1a1a2e">
+    <title>OK Cuisine — Assistant HACCP Vocal</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- ===================== ÉCRAN DE CONNEXION ===================== -->
+    <div id="login-screen" class="screen active">
+        <div class="login-container">
+            <div class="login-logo">
+                <div class="logo-icon">🍳</div>
+                <h1>OK Cuisine</h1>
+                <p class="login-subtitle">Assistant HACCP Vocal</p>
+            </div>
+            <div class="login-form">
+                <label>Sélectionnez votre profil</label>
+                <div id="user-list" class="user-list"></div>
+                <div class="pin-section" id="pin-section" style="display:none;">
+                    <label id="pin-label">Code PIN</label>
+                    <div class="pin-display" id="pin-display">
+                        <span class="pin-dot"></span>
+                        <span class="pin-dot"></span>
+                        <span class="pin-dot"></span>
+                        <span class="pin-dot"></span>
+                    </div>
+                    <div class="pin-pad">
+                        <button class="pin-btn" onclick="App.pinInput('1')">1</button>
+                        <button class="pin-btn" onclick="App.pinInput('2')">2</button>
+                        <button class="pin-btn" onclick="App.pinInput('3')">3</button>
+                        <button class="pin-btn" onclick="App.pinInput('4')">4</button>
+                        <button class="pin-btn" onclick="App.pinInput('5')">5</button>
+                        <button class="pin-btn" onclick="App.pinInput('6')">6</button>
+                        <button class="pin-btn" onclick="App.pinInput('7')">7</button>
+                        <button class="pin-btn" onclick="App.pinInput('8')">8</button>
+                        <button class="pin-btn" onclick="App.pinInput('9')">9</button>
+                        <button class="pin-btn pin-btn-clear" onclick="App.pinClear()">⌫</button>
+                        <button class="pin-btn" onclick="App.pinInput('0')">0</button>
+                        <button class="pin-btn pin-btn-ok" onclick="App.pinSubmit()">OK</button>
+                    </div>
+                    <button class="btn-link" onclick="App.backToUsers()">← Retour</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================== ÉCRAN PRINCIPAL ===================== -->
+    <div id="main-screen" class="screen">
+        <!-- Barre de navigation supérieure -->
+        <header class="top-bar">
+            <div class="top-bar-left">
+                <button class="menu-toggle" onclick="UI.toggleSidebar()" aria-label="Menu">
+                    <span></span><span></span><span></span>
+                </button>
+                <h2 class="top-bar-title" id="page-title">Tableau de bord</h2>
+            </div>
+            <div class="top-bar-right">
+                <div class="voice-status" id="voice-status">
+                    <span class="voice-dot"></span>
+                    <span class="voice-text">Vocal OFF</span>
+                </div>
+                <div class="user-badge" id="user-badge" onclick="App.showUserMenu()">
+                    <span class="user-avatar" id="user-avatar">?</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Menu latéral -->
+        <nav class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-brand">
+                    <span class="sidebar-brand-icon">🔓</span>
+                    <div class="sidebar-brand-text">
+                        <span class="sidebar-brand-name">OK CUISINE</span>
+                        <span class="sidebar-brand-sub">Assistant HACCP Vocal</span>
+                    </div>
+                </div>
+            </div>
+            <ul class="sidebar-nav">
+                <!-- ═══════════ OPÉRATIONS QUOTIDIENNES ═══════════ -->
+                <li class="nav-group open" data-group="operations">
+                    <button class="nav-group-toggle" onclick="UI.toggleNavGroup('operations')">
+                        <span class="nav-group-color" style="background:var(--accent);"></span>
+                        <span class="nav-group-icon">🎯</span>
+                        <span class="nav-group-label">Opérations quotidiennes</span>
+                        <span class="nav-group-arrow">›</span>
+                    </button>
+                    <ul class="nav-group-items">
+                        <li class="nav-item active" data-page="dashboard">
+                            <button onclick="App.navigate('dashboard')">
+                                <span class="nav-icon">📊</span>
+                                <span class="nav-label">Tableau de bord</span>
+                            </button>
+                        </li>
+                        <li class="nav-item" data-page="agents">
+                            <button onclick="App.navigate('agents')">
+                                <span class="nav-icon">👥</span>
+                                <span class="nav-label">Gestion agents</span>
+                            </button>
+                        </li>
+                        <li class="nav-item" data-page="calendrier">
+                            <button onclick="App.navigate('calendrier')">
+                                <span class="nav-icon">📅</span>
+                                <span class="nav-label">Calendrier</span>
+                            </button>
+                        </li>
+                        <li class="nav-item" data-page="temperatures">
+                            <button onclick="App.navigate('temperatures')">
+                                <span class="nav-icon">🌡️</span>
+                                <span class="nav-label">Températures</span>
+                            </button>
+                        </li>
+                        <li class="nav-item" data-page="nettoyage">
+                            <button onclick="App.navigate('nettoyage')">
+                                <span class="nav-icon">🧹</span>
+                                <span class="nav-label">Nettoyage</span>
+                            </button>
+                        </li>
+                        <li class="nav-item" data-page="receptions">
+                            <button onclick="App.navigate('receptions')">
+                                <span class="nav-icon">📦</span>
+                                <span class="nav-label">Réceptions</span>
+                            </button>
+                        </li>
+                        <li class="nav-item" data-page="inventaire">
+                            <button onclick="App.navigate('inventaire')">
+                                <span class="nav-icon">📋</span>
+                                <span class="nav-label">Inventaire</span>
+                            </button>
+                        </li>
+                        <li class="nav-item" data-page="menus">
+                            <button onclick="App.navigate('menus')">
+                                <span class="nav-icon">🍽️</span>
+                                <span class="nav-label">Menus</span>
+                            </button>
+                        </li>
+                    </ul>
+                </li>
+
+                <!-- ═══════════ GESTION RISQUES ═══════════ -->
+                <li class="nav-group" data-group="risques">
+                    <button class="nav-group-toggle" onclick="UI.toggleNavGroup('risques')">
+                        <span class="nav-group-color" style="background:var(--danger);"></span>
+                        <span class="nav-group-icon">⚠️</span>
+                        <span class="nav-group-label">Gestion risques</span>
+                        <span class="nav-badge nav-group-badge" id="risk-badge" style="display:none;">0</span>
+                        <span class="nav-group-arrow">›</span>
+                    </button>
+                    <ul class="nav-group-items">
+                        <li class="nav-item" data-page="alertes">
+                            <button onclick="App.navigate('alertes')">
+                                <span class="nav-icon">🔔</span>
+                                <span class="nav-label">Alertes</span>
+                                <span class="nav-badge" id="alert-badge" style="display:none;">0</span>
+                            </button>
+                        </li>
+                        <li class="nav-item" data-page="allergenes">
+                            <button onclick="App.navigate('allergenes')">
+                                <span class="nav-icon">🥜</span>
+                                <span class="nav-label">Allergènes</span>
+                            </button>
+                        </li>
+                        <li class="nav-item" data-page="tracabilite">
+                            <button onclick="App.navigate('tracabilite')">
+                                <span class="nav-icon">🔍</span>
+                                <span class="nav-label">Traçabilité</span>
+                            </button>
+                        </li>
+                        <li class="nav-item" data-page="protocoles">
+                            <button onclick="App.navigate('protocoles')">
+                                <span class="nav-icon">📖</span>
+                                <span class="nav-label">Protocoles HACCP</span>
+                            </button>
+                        </li>
+                        <li class="nav-item" data-page="journal">
+                            <button onclick="App.navigate('journal')">
+                                <span class="nav-icon">📝</span>
+                                <span class="nav-label">Journal</span>
+                            </button>
+                        </li>
+                        <li class="nav-item" data-page="audit">
+                            <button onclick="App.navigate('audit')">
+                                <span class="nav-icon">🔎</span>
+                                <span class="nav-label">Audit & Contrôle</span>
+                            </button>
+                        </li>
+                        <li class="nav-item" data-page="simulateur">
+                            <button onclick="App.navigate('simulateur')">
+                                <span class="nav-icon">🛡️</span>
+                                <span class="nav-label">Simulateur DDPP</span>
+                            </button>
+                        </li>
+                    </ul>
+                </li>
+
+                <!-- ═══════════ CONFORMITÉ AVANCÉE ═══════════ -->
+                <li class="nav-group" data-group="conformite">
+                    <button class="nav-group-toggle" onclick="UI.toggleNavGroup('conformite')">
+                        <span class="nav-group-color" style="background:var(--success);"></span>
+                        <span class="nav-group-icon">✅</span>
+                        <span class="nav-group-label">Conformité avancée</span>
+                        <span class="nav-badge nav-group-badge" id="compliance-badge" style="background:var(--success);">0/12</span>
+                        <span class="nav-group-arrow">›</span>
+                    </button>
+                    <ul class="nav-group-items">
+                        <li class="nav-item" data-page="formation">
+                            <button onclick="App.navigate('formation')">
+                                <span class="nav-icon">📚</span>
+                                <span class="nav-label">Formations</span>
+                            </button>
+                        </li>
+                        <li class="nav-item" data-page="centre-formation">
+                            <button onclick="App.navigate('centre-formation')">
+                                <span class="nav-icon">🎓</span>
+                                <span class="nav-label">Centre de formation</span>
+                            </button>
+                        </li>
+                        <li class="nav-item" data-page="tiac">
+                            <button onclick="App.navigate('tiac')">
+                                <span class="nav-icon">🚨</span>
+                                <span class="nav-label">TIAC Incidents</span>
+                            </button>
+                        </li>
+                        <li class="nav-item" data-page="rgpd">
+                            <button onclick="App.navigate('rgpd')">
+                                <span class="nav-icon">🔐</span>
+                                <span class="nav-label">RGPD Données</span>
+                            </button>
+                        </li>
+                        <li class="nav-item" data-page="rappels-produits">
+                            <button onclick="App.navigate('rappels-produits')">
+                                <span class="nav-icon">📦</span>
+                                <span class="nav-label">Rappels produits</span>
+                            </button>
+                        </li>
+                        <li class="nav-item" data-page="pai">
+                            <button onclick="App.navigate('pai')">
+                                <span class="nav-icon">⚠️</span>
+                                <span class="nav-label">PAI Allergies</span>
+                            </button>
+                        </li>
+                        <li class="nav-item" data-page="agec-avance">
+                            <button onclick="App.navigate('agec-avance')">
+                                <span class="nav-icon">♻️</span>
+                                <span class="nav-label">AGEC Dons</span>
+                            </button>
+                        </li>
+                        <li class="nav-item" data-page="maintenance">
+                            <button onclick="App.navigate('maintenance')">
+                                <span class="nav-icon">🔧</span>
+                                <span class="nav-label">Maintenance</span>
+                            </button>
+                        </li>
+                        <li class="nav-item" data-page="analyse-risques">
+                            <button onclick="App.navigate('analyse-risques')">
+                                <span class="nav-icon">🔬</span>
+                                <span class="nav-label">Analyse risques</span>
+                            </button>
+                        </li>
+                        <li class="nav-item" data-page="validation-nettoyage">
+                            <button onclick="App.navigate('validation-nettoyage')">
+                                <span class="nav-icon">🧼</span>
+                                <span class="nav-label">Validation nettoyage</span>
+                            </button>
+                        </li>
+                        <li class="nav-item" data-page="separation-cru-cuit">
+                            <button onclick="App.navigate('separation-cru-cuit')">
+                                <span class="nav-icon">🔪</span>
+                                <span class="nav-label">Séparation cru/cuit</span>
+                            </button>
+                        </li>
+                        <li class="nav-item" data-page="douches-vestiaires">
+                            <button onclick="App.navigate('douches-vestiaires')">
+                                <span class="nav-icon">🚿</span>
+                                <span class="nav-label">Douches/Vestiaires</span>
+                            </button>
+                        </li>
+                        <li class="nav-item" data-page="archivage-dlc">
+                            <button onclick="App.navigate('archivage-dlc')">
+                                <span class="nav-icon">🗄️</span>
+                                <span class="nav-label">Archivage DLC</span>
+                            </button>
+                        </li>
+                    </ul>
+                </li>
+
+                <!-- ═══════════ GESTION SYSTÈME ═══════════ -->
+                <li class="nav-group" data-group="systeme">
+                    <button class="nav-group-toggle" onclick="UI.toggleNavGroup('systeme')">
+                        <span class="nav-group-color" style="background:var(--text-muted);"></span>
+                        <span class="nav-group-icon">🛠️</span>
+                        <span class="nav-group-label">Gestion système</span>
+                        <span class="nav-group-arrow">›</span>
+                    </button>
+                    <ul class="nav-group-items">
+                        <li class="nav-item" data-page="recettes">
+                            <button onclick="App.navigate('recettes')">
+                                <span class="nav-icon">📖</span>
+                                <span class="nav-label">Recettes</span>
+                            </button>
+                        </li>
+                        <li class="nav-item" data-page="fournisseurs">
+                            <button onclick="App.navigate('fournisseurs')">
+                                <span class="nav-icon">🏭</span>
+                                <span class="nav-label">Fournisseurs</span>
+                            </button>
+                        </li>
+                        <li class="nav-item">
+                            <button onclick="App.loadDemoData()" style="color:var(--primary);">
+                                <span class="nav-icon">🎬</span>
+                                <span class="nav-label">Charger Démo</span>
+                            </button>
+                        </li>
+                        <li class="nav-item" data-page="config">
+                            <button onclick="App.navigate('config')">
+                                <span class="nav-icon">⚙️</span>
+                                <span class="nav-label">Configuration</span>
+                            </button>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+            <div class="sidebar-footer">
+                <div class="sidebar-user">
+                    <div class="sidebar-user-avatar" id="sidebar-user-avatar">?</div>
+                    <div class="sidebar-user-info">
+                        <div class="sidebar-user-name" id="user-name">-- Utilisateur --</div>
+                        <div class="sidebar-user-role" id="sidebar-user-role">Admin</div>
+                    </div>
+                </div>
+                <button class="btn-logout" onclick="App.logout()">🚪 Déconnexion</button>
+            </div>
+        </nav>
+
+        <!-- Overlay sidebar mobile -->
+        <div class="sidebar-overlay" id="sidebar-overlay" onclick="UI.toggleSidebar()"></div>
+
+        <!-- Contenu principal -->
+        <main class="content" id="content">
+            <!-- ===== DASHBOARD ===== -->
+            <section class="page active" id="page-dashboard"></section>
+
+            <!-- ===== AGENTS ===== -->
+            <section class="page" id="page-agents"></section>
+
+            <!-- ===== CALENDRIER ===== -->
+            <section class="page" id="page-calendrier"></section>
+
+            <!-- ===== TEMPÉRATURES ===== -->
+            <section class="page" id="page-temperatures"></section>
+
+            <!-- ===== NETTOYAGE ===== -->
+            <section class="page" id="page-nettoyage"></section>
+
+            <!-- ===== RÉCEPTIONS ===== -->
+            <section class="page" id="page-receptions"></section>
+
+            <!-- ===== INVENTAIRE ===== -->
+            <section class="page" id="page-inventaire"></section>
+
+            <!-- ===== ALERTES ===== -->
+            <section class="page" id="page-alertes"></section>
+
+            <!-- ===== ALLERGENES ===== -->
+            <section class="page" id="page-allergenes"></section>
+
+            <!-- ===== TRACABILITE ===== -->
+            <section class="page" id="page-tracabilite"></section>
+
+            <!-- ===== PROTOCOLES HACCP ===== -->
+            <section class="page" id="page-protocoles"></section>
+
+            <!-- ===== JOURNAL ===== -->
+            <section class="page" id="page-journal"></section>
+
+            <!-- ===== MENUS ===== -->
+            <section class="page" id="page-menus"></section>
+
+            <!-- ===== AUDIT & CONTROLE ===== -->
+            <section class="page" id="page-audit"></section>
+
+            <!-- ===== SIMULATEUR DDPP ===== -->
+            <section class="page" id="page-simulateur"></section>
+
+            <!-- ===== RECETTES / FICHES TECHNIQUES ===== -->
+            <section class="page" id="page-recettes"></section>
+
+            <!-- ===== FOURNISSEURS ===== -->
+            <section class="page" id="page-fournisseurs"></section>
+
+            <!-- ===== CONFIGURATION ===== -->
+            <section class="page" id="page-config"></section>
+
+            <!-- ===== FORMATIONS PERSONNEL ===== -->
+            <section class="page" id="page-formation"></section>
+
+            <!-- ===== CENTRE DE FORMATION EN LIGNE ===== -->
+            <section class="page" id="page-centre-formation"></section>
+
+            <!-- ===== TIAC INCIDENTS ===== -->
+            <section class="page" id="page-tiac"></section>
+
+            <!-- ===== RGPD DONNÉES ===== -->
+            <section class="page" id="page-rgpd"></section>
+
+            <!-- ===== RAPPELS PRODUITS ===== -->
+            <section class="page" id="page-rappels-produits"></section>
+
+            <!-- ===== PAI ALLERGIES ===== -->
+            <section class="page" id="page-pai"></section>
+
+            <!-- ===== AGEC AVANCÉ ===== -->
+            <section class="page" id="page-agec-avance"></section>
+
+            <!-- ===== MAINTENANCE ===== -->
+            <section class="page" id="page-maintenance"></section>
+
+            <!-- ===== ANALYSE DES RISQUES ===== -->
+            <section class="page" id="page-analyse-risques"></section>
+
+            <!-- ===== VALIDATION NETTOYAGE ===== -->
+            <section class="page" id="page-validation-nettoyage"></section>
+
+            <!-- ===== SÉPARATION CRU/CUIT ===== -->
+            <section class="page" id="page-separation-cru-cuit"></section>
+
+            <!-- ===== DOUCHES/VESTIAIRES ===== -->
+            <section class="page" id="page-douches-vestiaires"></section>
+
+            <!-- ===== ARCHIVAGE DLC ===== -->
+            <section class="page" id="page-archivage-dlc"></section>
+        </main>
+    </div>
+
+    <!-- ===================== PANNEAU VOCAL FLOTTANT ===================== -->
+    <div class="voice-panel" id="voice-panel">
+        <div class="voice-panel-header">
+            <span class="voice-panel-title">🎤 OK Cuisine</span>
+            <button class="voice-panel-close" onclick="Voice.closePanelOnly()">✕</button>
+        </div>
+        <div class="voice-panel-body">
+            <!-- Indicateur d'écoute -->
+            <div class="voice-listening" id="voice-listening">
+                <div class="pulse-ring"></div>
+                <div class="pulse-ring delay-1"></div>
+                <div class="pulse-ring delay-2"></div>
+                <div class="mic-icon">🎤</div>
+            </div>
+            <!-- Texte transcrit -->
+            <div class="voice-transcript" id="voice-transcript">
+                Dites <strong>"OK Cuisine"</strong> pour commencer
+            </div>
+            <!-- Panneau commandes disponibles -->
+            <div class="voice-commands" id="voice-commands">
+                <h3>Commandes disponibles :</h3>
+                <div class="command-section">
+                    <div class="command-section-title">Opérations quotidiennes</div>
+                    <div class="command-grid">
+                        <div class="command-card" onclick="Voice.triggerCommand('tableau de bord')">
+                            <span class="command-icon">📊</span>
+                            <span class="command-name">Tableau de bord</span>
+                        </div>
+                        <div class="command-card" onclick="Voice.triggerCommand('agents')">
+                            <span class="command-icon">👥</span>
+                            <span class="command-name">Gestion agents</span>
+                        </div>
+                        <div class="command-card" onclick="Voice.triggerCommand('calendrier')">
+                            <span class="command-icon">📅</span>
+                            <span class="command-name">Calendrier</span>
+                        </div>
+                        <div class="command-card" onclick="Voice.triggerCommand('température')">
+                            <span class="command-icon">🌡️</span>
+                            <span class="command-name">Température</span>
+                        </div>
+                        <div class="command-card" onclick="Voice.triggerCommand('nettoyage')">
+                            <span class="command-icon">🧹</span>
+                            <span class="command-name">Nettoyage</span>
+                        </div>
+                        <div class="command-card" onclick="Voice.triggerCommand('réception')">
+                            <span class="command-icon">📦</span>
+                            <span class="command-name">Réception</span>
+                        </div>
+                        <div class="command-card" onclick="Voice.triggerCommand('inventaire')">
+                            <span class="command-icon">📋</span>
+                            <span class="command-name">Inventaire</span>
+                        </div>
+                        <div class="command-card" onclick="Voice.triggerCommand('menu')">
+                            <span class="command-icon">🍽️</span>
+                            <span class="command-name">Page Menus</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="command-section">
+                    <div class="command-section-title">CCP & Process</div>
+                    <div class="command-grid">
+                        <div class="command-card" onclick="Voice.triggerCommand('cuisson')">
+                            <span class="command-icon">🔥</span>
+                            <span class="command-name">CCP Cuisson</span>
+                        </div>
+                        <div class="command-card" onclick="Voice.triggerCommand('refroidissement')">
+                            <span class="command-icon">❄️</span>
+                            <span class="command-name">Refroidissement</span>
+                        </div>
+                        <div class="command-card" onclick="Voice.triggerCommand('remise en température')">
+                            <span class="command-icon">♨️</span>
+                            <span class="command-name">Remise en temp.</span>
+                        </div>
+                        <div class="command-card" onclick="Voice.triggerCommand('huile')">
+                            <span class="command-icon">🍟</span>
+                            <span class="command-name">Huile friture</span>
+                        </div>
+                        <div class="command-card" onclick="Voice.triggerCommand('étiquette')">
+                            <span class="command-icon">🏷️</span>
+                            <span class="command-name">Étiquette J+3</span>
+                        </div>
+                        <div class="command-card" onclick="Voice.triggerCommand('plat témoin')">
+                            <span class="command-icon">🍽️</span>
+                            <span class="command-name">Plat témoin</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="command-section">
+                    <div class="command-section-title">Gestion risques</div>
+                    <div class="command-grid">
+                        <div class="command-card" onclick="Voice.triggerCommand('alerte')">
+                            <span class="command-icon">⚠️</span>
+                            <span class="command-name">Alerte</span>
+                        </div>
+                        <div class="command-card" onclick="Voice.triggerCommand('allergènes')">
+                            <span class="command-icon">🥜</span>
+                            <span class="command-name">Allergènes</span>
+                        </div>
+                        <div class="command-card" onclick="Voice.triggerCommand('traçabilité')">
+                            <span class="command-icon">🔍</span>
+                            <span class="command-name">Traçabilité</span>
+                        </div>
+                        <div class="command-card" onclick="Voice.triggerCommand('protocoles')">
+                            <span class="command-icon">📖</span>
+                            <span class="command-name">Protocoles HACCP</span>
+                        </div>
+                        <div class="command-card" onclick="Voice.triggerCommand('journal')">
+                            <span class="command-icon">📝</span>
+                            <span class="command-name">Journal</span>
+                        </div>
+                        <div class="command-card" onclick="Voice.triggerCommand('audit & controle')">
+                            <span class="command-icon">🔎</span>
+                            <span class="command-name">Audit & Contrôle</span>
+                        </div>
+                        <div class="command-card" onclick="Voice.triggerCommand('simulateur')">
+                            <span class="command-icon">🛡️</span>
+                            <span class="command-name">Simulateur DDPP</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="command-section">
+                    <div class="command-section-title">Conformité avancée</div>
+                    <div class="command-grid">
+                        <div class="command-card" onclick="Voice.triggerCommand('formation')">
+                            <span class="command-icon">📚</span>
+                            <span class="command-name">Formations</span>
+                        </div>
+                        <div class="command-card" onclick="Voice.triggerCommand('centre de formation')">
+                            <span class="command-icon">🎓</span>
+                            <span class="command-name">Centre de formation</span>
+                        </div>
+                        <div class="command-card" onclick="Voice.triggerCommand('tiac')">
+                            <span class="command-icon">🚨</span>
+                            <span class="command-name">TIAC Incidents</span>
+                        </div>
+                        <div class="command-card" onclick="Voice.triggerCommand('rgpd')">
+                            <span class="command-icon">🔐</span>
+                            <span class="command-name">RGPD Données</span>
+                        </div>
+                        <div class="command-card" onclick="Voice.triggerCommand('rappels produits')">
+                            <span class="command-icon">📦</span>
+                            <span class="command-name">Rappels produits</span>
+                        </div>
+                        <div class="command-card" onclick="Voice.triggerCommand('pai')">
+                            <span class="command-icon">⚠️</span>
+                            <span class="command-name">PAI Allergies</span>
+                        </div>
+                        <div class="command-card" onclick="Voice.triggerCommand('agec')">
+                            <span class="command-icon">♻️</span>
+                            <span class="command-name">AGEC Dons</span>
+                        </div>
+                        <div class="command-card" onclick="Voice.triggerCommand('maintenance')">
+                            <span class="command-icon">🔧</span>
+                            <span class="command-name">Maintenance</span>
+                        </div>
+                        <div class="command-card" onclick="Voice.triggerCommand('analyse risques')">
+                            <span class="command-icon">🔬</span>
+                            <span class="command-name">Analyse risques</span>
+                        </div>
+                        <div class="command-card" onclick="Voice.triggerCommand('validation nettoyage')">
+                            <span class="command-icon">🧼</span>
+                            <span class="command-name">Validation nettoyage</span>
+                        </div>
+                        <div class="command-card" onclick="Voice.triggerCommand('separation cru cuit')">
+                            <span class="command-icon">🔪</span>
+                            <span class="command-name">Séparation cru/cuit</span>
+                        </div>
+                        <div class="command-card" onclick="Voice.triggerCommand('douches vestiaires')">
+                            <span class="command-icon">🚿</span>
+                            <span class="command-name">Douches/Vestiaires</span>
+                        </div>
+                        <div class="command-card" onclick="Voice.triggerCommand('archivage dlc')">
+                            <span class="command-icon">🗄️</span>
+                            <span class="command-name">Archivage DLC</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="command-section">
+                    <div class="command-section-title">Gestion système</div>
+                    <div class="command-grid">
+                        <div class="command-card" onclick="Voice.triggerCommand('recettes')">
+                            <span class="command-icon">📖</span>
+                            <span class="command-name">Recettes</span>
+                        </div>
+                        <div class="command-card" onclick="Voice.triggerCommand('fournisseurs')">
+                            <span class="command-icon">🏭</span>
+                            <span class="command-name">Fournisseurs</span>
+                        </div>
+                        <div class="command-card" onclick="Voice.triggerCommand('configuration')">
+                            <span class="command-icon">⚙️</span>
+                            <span class="command-name">Configuration</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="command-section">
+                    <div class="command-section-title">Actions</div>
+                    <div class="command-grid">
+                        <div class="command-card" onclick="Voice.triggerCommand('génère un menu')">
+                            <span class="command-icon">📅</span>
+                            <span class="command-name">Générer Menu</span>
+                        </div>
+                        <div class="command-card" onclick="Voice.triggerCommand('lance une simulation')">
+                            <span class="command-icon">🛡️</span>
+                            <span class="command-name">Lancer Simulation</span>
+                        </div>
+                        <div class="command-card" onclick="Voice.triggerCommand('exporter')">
+                            <span class="command-icon">📄</span>
+                            <span class="command-name">Exporter PDF</span>
+                        </div>
+                        <div class="command-card" onclick="Voice.triggerCommand('imprimer')">
+                            <span class="command-icon">🖨️</span>
+                            <span class="command-name">Imprimer</span>
+                        </div>
+                        <div class="command-card" onclick="Voice.triggerCommand('aide')">
+                            <span class="command-icon">❓</span>
+                            <span class="command-name">Aide</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Conversation en cours -->
+            <div class="voice-conversation" id="voice-conversation" style="display:none;">
+                <div class="conversation-messages" id="conversation-messages"></div>
+            </div>
+        </div>
+        <div class="voice-panel-footer">
+            <button class="btn-voice-cancel" onclick="Voice.cancel()">Annuler</button>
+        </div>
+    </div>
+
+    <!-- ===================== BOUTON MICRO FLOTTANT ===================== -->
+    <button class="fab-mic" id="fab-mic" onclick="Voice.toggle()" aria-label="Activer le micro">
+        <span class="fab-mic-icon">🎤</span>
+        <span class="fab-mic-label">OK Cuisine</span>
+    </button>
+
+    <!-- ===================== ZONE NOTIFICATIONS ===================== -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <!-- ===================== MODAL GÉNÉRIQUE ===================== -->
+    <div class="modal-overlay" id="modal-overlay">
+        <div class="modal" id="modal">
+            <div class="modal-header">
+                <h3 id="modal-title">Titre</h3>
+                <button class="modal-close" onclick="UI.closeModal()">✕</button>
+            </div>
+            <div class="modal-body" id="modal-body"></div>
+            <div class="modal-footer" id="modal-footer"></div>
+        </div>
+    </div>
+
+    <!-- ===================== SCRIPTS ===================== -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+    <script src="js/recettes-database.js"></script>
+    <script src="js/fournisseurs-database-complet.js"></script>
+    <script src="js/storage.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/voice.js"></script>
+    <script src="js/dashboard.js"></script>
+    <script src="js/temperatures.js"></script>
+    <script src="js/nettoyage.js"></script>
+    <script src="js/receptions.js"></script>
+    <script src="js/inventaire.js"></script>
+    <script src="js/alertes.js"></script>
+    <script src="js/journal.js"></script>
+    <script src="js/allergenes.js"></script>
+    <script src="js/tracabilite.js"></script>
+    <script src="js/protocoles.js"></script>
+    <script src="js/recettes.js"></script>
+    <script src="js/fournisseurs.js"></script>
+    <script src="js/menus.js"></script>
+    <script src="js/audit.js"></script>
+    <script src="js/simulateur.js"></script>
+    <script src="js/config.js"></script>
+    <script src="js/formation.js"></script>
+    <script src="js/centre-formation.js"></script>
+    <script src="js/tiac.js"></script>
+    <script src="js/rgpd.js"></script>
+    <script src="js/rappels-produits.js"></script>
+    <script src="js/pai.js"></script>
+    <script src="js/agec-avance.js"></script>
+    <script src="js/maintenance.js"></script>
+    <script src="js/analyse-risques.js"></script>
+    <script src="js/validation-nettoyage.js"></script>
+    <script src="js/separation-cru-cuit.js"></script>
+    <script src="js/douches-vestiaires.js"></script>
+    <script src="js/archivage-dlc.js"></script>
+    <script src="js/agents.js"></script>
+    <script src="js/calendrier.js"></script>
+    <script src="js/pdf.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

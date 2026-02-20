@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OK Cuisine - Générateur de Menus V2.5</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background: url('https://ilotarchitecture.com/wp-content/uploads/2016/01/2016_GrandeBastide01.jpg') no-repeat center center fixed;
+        background-size: cover;
+        margin: 0; padding: 0;
+    }
+    header {
+        background: #0073e6;
+        color: white;
+        padding: 15px;
+        text-align: center;
+    }
+    header img {
+        height: 50px;
+        vertical-align: middle;
+        margin-right: 10px;
+    }
+    main {
+        padding: 20px;
+        max-width: 1200px;
+        margin: auto;
+    }
+    .controls {
+        display: flex;
+        gap: 15px;
+        flex-wrap: wrap;
+        margin-bottom: 20px;
+    }
+    select, button {
+        padding: 8px;
+        font-size: 16px;
+    }
+
+    /* Couleurs pour les selects */
+    .controls select#collectivite {
+        background-color: #d9edf7; /* bleu clair */
+        border: 1px solid #0073e6;
+        border-radius: 4px;
+        color: #0073e6;
+    }
+    .controls select#theme {
+        background-color: #d4efdf; /* vert clair */
+        border: 1px solid #28a745;
+        border-radius: 4px;
+        color: #28a745;
+    }
+    .controls select#nb-semaine {
+        background-color: #fcf3cf; /* jaune clair */
+        border: 1px solid #f1c40f;
+        border-radius: 4px;
+        color: #f1c40f;
+    }
+
+    /* Couleurs boutons */
+    .controls button#generate {
+        background-color: #ff7f50; /* corail */
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: bold;
+        padding: 8px 12px;
+    }
+    .controls button#generate:hover {
+        background-color: #ff6347;
+    }
+    .controls button#export {
+        background-color: #28a745;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: bold;
+        padding: 8px 12px;
+    }
+    .controls button#export:hover {
+        background-color: #218838;
+    }
+
+    .menu-week {
+        border: 1px solid #ccc;
+        margin-bottom: 20px;
+        border-radius: 5px;
+        overflow: hidden;
+    }
+    .menu-week h3 {
+        margin: 0;
+        padding: 10px;
+        background: #0073e6;
+        color: white;
+    }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    th, td {
+        border: 1px solid #ccc;
+        padding: 8px;
+        text-align: center;
+    }
+    th {
+        background: #e0e0e0;
+    }
+    td.jour { background: #d9edf7; }
+    td.entree { background: #f9e79f; }
+    td.plat { background: #f5b7b1; }
+    td.accompagnement { background: #aed6f1; }
+    td.dessert { background: #d2b4de; }
+    td.fromage { background: #f7dc6f; }
+    td.allergen { background: #f1948a; font-size: 12px; color: red; }
+</style>
+</head>
+<body>
+<header>
+    <img src="https://upload.wikimedia.org/wikipedia/commons/4/44/Logo-School.svg" alt="Logo Collège">
+    <span>OK Cuisine - Générateur de Menus V2.5</span>
+</header>
+<main>
+    <div class="controls">
+        <label>Collectivité:
+            <select id="collectivite">
+                <option value="ecole">École Primaire</option>
+                <option value="college">Collège</option>
+                <option value="lycee">Lycée</option>
+                <option value="creche">Crèche</option>
+                <option value="ehpad">EHPAD</option>
+            </select>
+        </label>
+        <label>Thématique:
+            <select id="theme">
+                <option value="classique">Classique</option>
+                <option value="noel">Noël</option>
+                <option value="paques">Pâques</option>
+                <option value="halloween">Halloween</option>
+                <option value="fete">Fête des enfants</option>
+                <option value="chandeleur">Chandeleur</option>
+            </select>
+        </label>
+        <label>Nombre de semaines:
+            <select id="nb-semaine">
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+            </select>
+        </label>
+        <button id="generate">Simuler Menu</button>
+        <button id="export" class="pdf-btn">Exporter PDF</button>
+    </div>
+
+    <div id="menus-container"></div>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+const menusContainer = document.getElementById('menus-container');
+const generateBtn = document.getElementById('generate');
+const exportBtn = document.getElementById('export');
+const collectiviteSelect = document.getElementById('collectivite');
+const themeSelect = document.getElementById('theme');
+const nbSemaineSelect = document.getElementById('nb-semaine');
+
+const stockMenus = {
+    classique: [
+        {entree:'Salade de carottes', plat:'Poulet rôti', accompagnement:'Purée', dessert:'Fruit', fromage:'Comté'},
+        {entree:'Velouté de légumes', plat:'Poisson blanc', accompagnement:'Riz', dessert:'Yaourt', fromage:'Emmental'},
+        {entree:'Tomates mozzarella', plat:'Boeuf haché', accompagnement:'Pâtes', dessert:'Compote', fromage:'Brie'},
+        {entree:'Betteraves vinaigrette', plat:'Filet de dinde', accompagnement:'Pommes de terre', dessert:'Fruit', fromage:'Cantal'}
+    ],
+    noel: [
+        {entree:'Foie gras', plat:'Dinde farcie', accompagnement:'Gratin dauphinois', dessert:'Bûche chocolat', fromage:'Roquefort'},
+        {entree:'Saumon fumé', plat:'Chapon', accompagnement:'Pommes duchesse', dessert:'Bûche vanille', fromage:'Comté'}
+    ],
+    paques: [
+        {entree:'Œufs mimosa', plat:'Gigot d’agneau', accompagnement:'Gratin légumes', dessert:'Tarte aux fraises', fromage:'Brie'}
+    ],
+    halloween: [
+        {entree:'Potage citrouille', plat:'Poulet rôti', accompagnement:'Purée carotte', dessert:'Cupcake citrouille', fromage:'Emmental'}
+    ],
+    fete: [
+        {entree:'Crudités', plat:'Steak haché', accompagnement:'Frites', dessert:'Glace', fromage:'Cantal'}
+    ],
+    chandeleur: [
+        {entree:'Salade verte', plat:'Crêpes jambon-fromage', accompagnement:'Salade de pommes', dessert:'Crêpes sucrées', fromage:'Raclette'}
+    ]
+};
+
+function genererMenus() {
+    menusContainer.innerHTML = '';
+    const theme = themeSelect.value;
+    const nbSemaine = parseInt(nbSemaineSelect.value);
+    for(let s=1; s<=nbSemaine; s++){
+        const weekDiv = document.createElement('div');
+        weekDiv.className='menu-week';
+        weekDiv.innerHTML = `<h3>Semaine ${s} - ${themeSelect.options[themeSelect.selectedIndex].text}</h3>`;
+        const table = document.createElement('table');
+        const header = `<tr><th>Jour</th><th>Entrée</th><th>Plat</th><th>Accompagnement</th><th>Dessert</th><th>Fromage</th><th>Allergènes</th></tr>`;
+        table.innerHTML = header;
+        const jours = ['Lundi','Mardi','Mercredi','Jeudi','Vendredi'];
+        for(let j=0;j<5;j++){
+            const menu = stockMenus[theme][Math.floor(Math.random()*stockMenus[theme].length)];
+            const allergenes = 'Gluten, Lait'; 
+            const row = `<tr>
+                <td class="jour">${jours[j]}</td>
+                <td class="entree">${menu.entree}</td>
+                <td class="plat">${menu.plat}</td>
+                <td class="accompagnement">${menu.accompagnement}</td>
+                <td class="dessert">${menu.dessert}</td>
+                <td class="fromage">${menu.fromage}</td>
+                <td class="allergen">${allergenes}</td>
+            </tr>`;
+            table.innerHTML += row;
+        }
+        weekDiv.appendChild(table);
+        menusContainer.appendChild(weekDiv);
+    }
+}
+
+// PDF amélioré
+function exportPDF() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF('p','pt','a4');
+    let y = 40;
+    doc.setFontSize(18);
+    doc.text("OK Cuisine - Menus", 300, y, {align:'center'});
+    y += 20;
+
+    const semaines = document.querySelectorAll('.menu-week');
+    semaines.forEach((week) => {
+        doc.setFontSize(14);
+        doc.setFillColor(0,115,230);
+        doc.rect(40, y-15, 520, 20, 'F');
+        doc.setTextColor(255,255,255);
+        doc.text(week.querySelector('h3').innerText, 45, y);
+        y += 30;
+
+        const rows = week.querySelectorAll('table tr');
+        rows.forEach((tr, ri)=>{
+            const cells = tr.querySelectorAll('th, td');
+            let x = 40;
+            cells.forEach((cell, ci)=>{
+                if(cell.classList.contains('jour')) doc.setFillColor(217,239,247);
+                else if(cell.classList.contains('entree')) doc.setFillColor(249,231,159);
+                else if(cell.classList.contains('plat')) doc.setFillColor(245,183,177);
+                else if(cell.classList.contains('accompagnement')) doc.setFillColor(174,214,241);
+                else if(cell.classList.contains('dessert')) doc.setFillColor(210,180,222);
+                else if(cell.classList.contains('fromage')) doc.setFillColor(247,220,111);
+                else if(cell.classList.contains('allergen')) doc.setFillColor(241,148,138);
+                else doc.setFillColor(255,255,255);
+
+                doc.setDrawColor(200);
+                doc.rect(x, y-12, 75, 20, 'FD');
+                doc.setTextColor(0,0,0);
+                doc.setFontSize(10);
+                doc.text(cell.innerText, x+2, y+3);
+                x += 75;
+            });
+            y += 22;
+            if(y>750){doc.addPage(); y=40;}
+        });
+        y += 20;
+    });
+
+    doc.save("menus_pro.pdf");
+}
+
+generateBtn.addEventListener('click', genererMenus);
+exportBtn.addEventListener('click', exportPDF);
+</script>
+</body>
+</html>

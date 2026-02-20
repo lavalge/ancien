@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#1a1a2e">
+    <title>OK Cuisine — Démonstration Interactive</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            font-family: 'Segoe UI', sans-serif;
+        }
+        .demo-container {
+            width: 100%;
+            max-width: 1200px;
+        }
+        .demo-header {
+            text-align: center;
+            margin-bottom: 3rem;
+            color: #fff;
+        }
+        .demo-header h1 {
+            font-size: 2.5rem;
+            margin: 0 0 0.5rem 0;
+            background: linear-gradient(135deg, #00b4d8, #0096c7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .demo-header p {
+            font-size: 1.1rem;
+            color: #a0a0b0;
+            margin: 0;
+        }
+        .demo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        .demo-card {
+            background: linear-gradient(135deg, #2a2a4a 0%, #1f1f35 100%);
+            border: 2px solid transparent;
+            border-radius: 16px;
+            padding: 2rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .demo-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--demo-color);
+        }
+        .demo-card:hover {
+            transform: translateY(-8px);
+            border-color: var(--demo-color);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.3);
+        }
+        .demo-card.ecole { --demo-color: #2ecc71; }
+        .demo-card.lycee { --demo-color: #3498db; }
+        .demo-card.maternelle { --demo-color: #f39c12; }
+        .demo-card.creche { --demo-color: #e74c3c; }
+        .demo-card.problematique { --demo-color: #9b59b6; }
+        
+        .demo-emoji {
+            font-size: 3.5rem;
+            margin-bottom: 1rem;
+        }
+        .demo-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 0.5rem;
+        }
+        .demo-description {
+            font-size: 0.95rem;
+            color: #a0a0b0;
+            margin-bottom: 1.5rem;
+            line-height: 1.5;
+        }
+        .demo-stats {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        .demo-stat {
+            flex: 1;
+            text-align: center;
+            padding: 0.75rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+        }
+        .demo-stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--demo-color);
+        }
+        .demo-stat-label {
+            font-size: 0.75rem;
+            color: #a0a0b0;
+            margin-top: 0.25rem;
+        }
+        .demo-button {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background: var(--demo-color);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+        }
+        .demo-button:hover {
+            filter: brightness(1.1);
+            transform: scale(1.02);
+        }
+        .demo-button:active {
+            transform: scale(0.98);
+        }
+        .demo-footer {
+            text-align: center;
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid #2a2a4a;
+        }
+        .demo-footer p {
+            color: #a0a0b0;
+            font-size: 0.95rem;
+            margin: 0.5rem 0;
+        }
+        .back-button {
+            display: inline-block;
+            margin-top: 1rem;
+            padding: 0.75rem 1.5rem;
+            background: #3498db;
+            color: #fff;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        .back-button:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+        }
+        .info-box {
+            background: linear-gradient(135deg, rgba(0, 180, 216, 0.1), rgba(52, 152, 219, 0.1));
+            border-left: 4px solid #00b4d8;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+            color: #a0a0b0;
+        }
+        .info-box strong {
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+    <div class="demo-container">
+        <div class="demo-header">
+            <h1>🛡️ OK Cuisine — Démonstration</h1>
+            <p>Choisissez un scénario de formation pour découvrir le simulateur HACCP</p>
+        </div>
+
+        <div class="info-box">
+            <strong>📌 Bienvenue en mode démonstration !</strong><br>
+            Sélectionnez un établissement type ci-dessous pour lancer une simulation d'audit DDPP réaliste. 
+            Aucune donnée n'est sauvegardée. C'est un pur test de démonstration.
+        </div>
+
+        <div class="demo-grid">
+            <!-- ÉCOLE -->
+            <div class="demo-card ecole" onclick="launchDemo('ecole')">
+                <div class="demo-emoji">🏫</div>
+                <div class="demo-title">École Primaire</div>
+                <div class="demo-description">Établissement scolaire bien structuré avec bonnes pratiques HACCP maîtrisées.</div>
+                <div class="demo-stats">
+                    <div class="demo-stat">
+                        <div class="demo-stat-value">A</div>
+                        <div class="demo-stat-label">Note DDPP</div>
+                    </div>
+                    <div class="demo-stat">
+                        <div class="demo-stat-value">90%</div>
+                        <div class="demo-stat-label">Conformité</div>
+                    </div>
+                </div>
+                <button class="demo-button">Démarrer cette démo</button>
+            </div>
+
+            <!-- LYCÉE -->
+            <div class="demo-card lycee" onclick="launchDemo('lycee')">
+                <div class="demo-emoji">🎓</div>
+                <div class="demo-title">Lycée Professionnel</div>
+                <div class="demo-description">Restaurant scolaire important avec gestion HACCP moyenne, corrections mineures nécessaires.</div>
+                <div class="demo-stats">
+                    <div class="demo-stat">
+                        <div class="demo-stat-value">B</div>
+                        <div class="demo-stat-label">Note DDPP</div>
+                    </div>
+                    <div class="demo-stat">
+                        <div class="demo-stat-value">75%</div>
+                        <div class="demo-stat-label">Conformité</div>
+                    </div>
+                </div>
+                <button class="demo-button">Démarrer cette démo</button>
+            </div>
+
+            <!-- MATERNELLE -->
+            <div class="demo-card maternelle" onclick="launchDemo('maternelle')">
+                <div class="demo-emoji">👶</div>
+                <div class="demo-title">Maternelle</div>
+                <div class="demo-description">Accueil petit enfance avec cuisine, audit sensibilité renforcée. Très bon établissement.</div>
+                <div class="demo-stats">
+                    <div class="demo-stat">
+                        <div class="demo-stat-value">A</div>
+                        <div class="demo-stat-label">Note DDPP</div>
+                    </div>
+                    <div class="demo-stat">
+                        <div class="demo-stat-value">85%</div>
+                        <div class="demo-stat-label">Conformité</div>
+                    </div>
+                </div>
+                <button class="demo-button">Démarrer cette démo</button>
+            </div>
+
+            <!-- CRÈCHE -->
+            <div class="demo-card creche" onclick="launchDemo('creche')">
+                <div class="demo-emoji">🍼</div>
+                <div class="demo-title">Crèche Collective</div>
+                <div class="demo-description">Restauration externalisée avec approvisionnement tiers. Conformité acceptable.</div>
+                <div class="demo-stats">
+                    <div class="demo-stat">
+                        <div class="demo-stat-value">B</div>
+                        <div class="demo-stat-label">Note DDPP</div>
+                    </div>
+                    <div class="demo-stat">
+                        <div class="demo-stat-value">80%</div>
+                        <div class="demo-stat-label">Conformité</div>
+                    </div>
+                </div>
+                <button class="demo-button">Démarrer cette démo</button>
+            </div>
+
+            <!-- PROBLÉMATIQUE -->
+            <div class="demo-card problematique" onclick="launchDemo('problematique')">
+                <div class="demo-emoji">⚠️</div>
+                <div class="demo-title">Établissement Problématique</div>
+                <div class="demo-description">Établissement avec sérieuses non-conformités. Mise en demeure probable après audit.</div>
+                <div class="demo-stats">
+                    <div class="demo-stat">
+                        <div class="demo-stat-value">C</div>
+                        <div class="demo-stat-label">Note DDPP</div>
+                    </div>
+                    <div class="demo-stat">
+                        <div class="demo-stat-value">55%</div>
+                        <div class="demo-stat-label">Conformité</div>
+                    </div>
+                </div>
+                <button class="demo-button">Démarrer cette démo</button>
+            </div>
+
+            <!-- MODE MANUEL -->
+            <div class="demo-card" style="--demo-color: #1abc9c;" onclick="launchDemo('manuel')">
+                <div class="demo-emoji">✋</div>
+                <div class="demo-title">Mode Manuel</div>
+                <div class="demo-description">Testez vos connaissances ! Répondez vous-même à toutes les questions d'audit HACCP.</div>
+                <div class="demo-stats">
+                    <div class="demo-stat">
+                        <div class="demo-stat-value">?</div>
+                        <div class="demo-stat-label">À découvrir</div>
+                    </div>
+                    <div class="demo-stat">
+                        <div class="demo-stat-value">50+</div>
+                        <div class="demo-stat-label">Questions</div>
+                    </div>
+                </div>
+                <button class="demo-button">Démarrer cette démo</button>
+            </div>
+        </div>
+
+        <div class="demo-footer">
+            <p><strong>💡 Astuce :</strong> Modifiez les réponses pendant l'audit pour voir comment le score change en temps réel.</p>
+            <p><strong>📊 Export :</strong> Vous pouvez exporter l'audit en PDF pour l'archiver ou le partager.</p>
+            <a href="index.html" class="back-button">← Retour à l'application</a>
+        </div>
+    </div>
+
+    <script>
+        function launchDemo(scenarioKey) {
+            // Stocker le scénario choisi (fallback localStorage pour file://)
+            sessionStorage.setItem('demo_scenario', scenarioKey);
+            localStorage.setItem('demo_scenario', scenarioKey);
+            
+            // Rediriger vers index.html
+            window.location.href = 'index.html?demo=' + scenarioKey;
+        }
+    </script>
+</body>
+</html>
